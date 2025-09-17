@@ -5,9 +5,8 @@ using System.Runtime.Serialization;
 using System.ServiceModel;
 using System.ServiceModel.Web;
 using System.Text;
-using DTOClasses;
-using UtilityMethods;
-using Enums;
+using DustCollectors.Classes;
+
 
 namespace DustCollectors
 {
@@ -17,47 +16,34 @@ namespace DustCollectors
     {
         
         [OperationContract]
-        bool RegisterCustomer(SysUser newCustomer);
+        bool IsReg(SysUser user);
         [OperationContract]
-        bool AddAdmin(SysUser newAdmin);
+        UserSessionDetails GetUserSessionDetails(string email, string password);
+        [OperationContract]
+        UserPersonalDetails GetUserDetails(int Id);
+        [OperationContract]
+        string GetUserPassword(int UserId);
+        [OperationContract]
+        List<CustomerAddress> GetCustomerAddresses(int userID);
 
         [OperationContract]
-        UserDetails GetActiveUsersDetails(string email, string password);
-        /*
-                // shoe catalog
-                [OperationContract]
-                List<ShoeInventory> GetActiveShoesCatalog();
-        */
-        /** retrieval methods */
-        
+        bool InsertAddress(CustomerAddressInsert address);
         [OperationContract]
-        List<CatalogDisplayShoe> GetActiveShoesCatalog();
+        CustomerAddress getCustomerAddress(int customerID);
+        bool InsertBrand(Brand newBrand);
         [OperationContract]
-        List<Category> GetAvailableShoeCategories();
-
-        /**insert methods */
-        // product
+        bool InsertGender(Gender newGender);
         [OperationContract]
-         bool InsertProduct(ProductDTO newProduct);
-        //shoe
+        bool InsertShoeColourway(Colourway newColourway);
         [OperationContract]
-        bool InsertShoe(ShoeInfoDTO newShoe);
-        [OperationContract]
-        bool InsertColourWay(Colourway newColourway);
-        // shoe sizes
+        bool InsertShoeCategory(Category newCategory);
         [OperationContract]
         bool InsertShoeSize(ShoeSize newShoeSize);
-        // brands
-        [OperationContract]
-        bool InsertShoeBrand(Brand newBrand);
-        [OperationContract]
-        List<Brand> GetActiveShoeBrands();
-        // shoe categories
-        [OperationContract]
-        bool InsertShoeCategory(Category newShoeCategory);
-       
 
+        [OperationContract]
+        bool InsertProduct(Product newProduct);
     }
-    
-    
+
+
+
 }

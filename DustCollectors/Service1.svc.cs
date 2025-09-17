@@ -5,8 +5,8 @@ using System.Runtime.Serialization;
 using System.ServiceModel;
 using System.ServiceModel.Web;
 using System.Text;
-using UtilityMethods;
-using DTOClasses;
+using DustCollectors.Classes;
+
 namespace DustCollectors
 {
     // NOTE: You can use the "Rename" command on the "Refactor" menu to change the class name "Service1" in code, svc and config file together.
@@ -14,304 +14,185 @@ namespace DustCollectors
     public class Service1 : IService1
     {
         DustCollectorsDBDataClassesDataContext db = new DustCollectorsDBDataClassesDataContext();
-        // uses register user function from the Helpers to add a user of type customer
-        bool IService1.RegisterCustomer(SysUser newCustomer)
-        {
-            // determine the user type
 
-            newCustomer.UserType = "customer";
-            return Helpers.RegisterUser(newCustomer);
-            
-            
-        }
-        // uses register user function from the Helpers to add a user of type admin admin
-        bool IService1.AddAdmin(SysUser newAdmin)
+        // checks if a user exists, if they exist, retruns false otherwise adds the user to the database and returns true
+        bool IService1.IsReg(SysUser newUser)
         {
-            // determine the user type
-            newAdmin.UserType = "admin";
-            return Helpers.RegisterUser(newAdmin);
-        }
 
-        UserDetails IService1.GetActiveUsersDetails(string email, string password)
-        {
+            // check if the user already exists
             var user = (from u in db.SysUsers
-                        where u.EmailAddress.Equals(email) && u.Password.Equals(password) && u.IsActive.Equals(1)
+                        where u.EmailAddress.Equals(newUser.EmailAddress) && u.Password.Equals(newUser.Password)
                         select u).FirstOrDefault();
 
+
+            if (user != null)
+                return false;
+
+            newUser.IsActive = true;
+            newUser.DateRegistered = DateTime.Now;
+
+            // try to insert the new user
+            db.SysUsers.InsertOnSubmit(newUser);
+            try
+            {
+                db.SubmitChanges();
+                return true;
+            }
+            catch (Exception e)
+            {
+                e.GetBaseException();
+                return false;
+            }
+        }
+        // retrieves the details required to start a user session
+        UserSessionDetails IService1.GetUserSessionDetails(string email, string password)
+        {
+            var user = (from u in db.SysUsers
+                        where u.EmailAddress.Equals(email) && u.Password.Equals(password)
+                        select u).FirstOrDefault();
             if (user == null)
                 return null;
 
-            return new UserDetails(user.FirstName, user.LastName, user.EmailAddress, user.PhoneNumber);
-        }
-        /*
-                /*
-                List<Shoe> IService1.GetActiveShoes()
-                {
-                    dynamic shoes = (from s in db.Shoes
-                                     where s.IsAvailable.Equals(1)
-                                     select s).DefaultIfEmpty();
-
-                    if (shoes == null)
-                        return null;
-
-                    List<Shoe> shoesList = new List<Shoe>();
-                    foreach(Shoe s in shoes)
-                    {
-                        shoesList.Add(s);
-                    }
-
-                    return shoesList;
-                }*/
-
-        /*
-
-        // shoe catalog
-        List<Shoe> IService1.GetActiveShoesInventory()
-        {
-            dynamic activeShoes = (from s in db.ShoeInventories
-                                  where s.IsAvailable.Equals(1)
-                                  select s).DefaultIfEmpty();
-            if (activeShoes == null)
-                return null;
-            List<ShoeInventory> shoes = new List<ShoeInventory>();
-
-            foreach (ShoeInventory c in shoes)
+            return new UserSessionDetails
             {
-                if (c != null)
-                    shoes.Add(c);
+                Id = user.Id,
+                Name = user.FirstName,
+                userType = user.UserType
+            };
+        }
+        UserPersonalDetails IService1.GetUserDetails(int Id)
+        {
+            var user = (from u in db.SysUsers
+                        where u.IsActive.Equals(1) && u.Id.Equals(Id)
+                        select u).FirstOrDefault();
+            if (user == null)
+                return null;
+            return new UserPersonalDetails()
+            {
+                ID = user.Id,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                EmailAddress = user.EmailAddress,
+                PhoneNumber = user.PhoneNumber
+            };
+        }
+        string IService1.GetUserPassword(int UserId)
+        {
+            var user = (from u in db.SysUsers
+                        where u.IsActive.Equals(1) && u.Id.Equals(UserId)
+                        select u).FirstOrDefault();
+            if (user == null)
+                return null;
+            return user.Password;
+        }
+        List<CustomerAddress> IService1.GetCustomerAddresses(int userID)
+        {
+            dynamic addresses = (from a in db.CustomerDeliveryAddresses
+                                 where a.IsActive.Equals(1) && a.CustomerID.Equals(userID)
+                                 select a).DefaultIfEmpty();
+            if (addresses == null)
+                return null;
+
+            List<CustomerAddress> custAddresses = new List<CustomerAddress>();
+            foreach(CustomerDeliveryAddress a in addresses)
+            {
+                if (a != null)
+                {
+                    custAddresses.Add(new CustomerAddress()
+                    {
+                        Id=a.Id,
+                        RecipientName = a.RecipientName,
+                        RecipientPhone = a.RecipientPhone,
+                        StreetAddress = a.Street_Address,
+                        ComplexOrBuilding = a.ComplexOrBuilding,
+                        Suburb = a.Surburb,
+                        CityOrTown = a.CityOrTown,
+                        Province = a.Province,
+                        PostalCode = a.PostalCode
+                    });
+                }
             }
 
-            return shoes;
+            return custAddresses;
         }
-        */
-        // shoe
-        bool IService1.InsertShoe(ShoeInfoDTO newShoe)
+        bool IService1.InsertAddress(CustomerAddressInsert address)
         {
-            var shoe = (from s in db.Shoes
-                        where s.ProductID.Equals(newShoe.productID) 
-                        select s).FirstOrDefault();
-            /*
-            if (shoe != null)
-                return false;
-            
-            var shoeToInsert = new Shoe
+            var customerAddress = new CustomerDeliveryAddress()
             {
-                ProductID = newShoe.productID,
-                SizeID = newShoe.sizeID,
-                Price = newShoe.price,
-                DiscountPercentage = newShoe.discountPercentage,
-                QTYInStock = newShoe.qtyInStock,
-                IsAvailable = newShoe.isAvailable,
-                Gender = newShoe.gender,
-                ColourWayID = newShoe.colourwayID,
-                Weight = newShoe.weight,
-                WeightSystem = newShoe.weightMeasurement,
-                MainImgURL = newShoe.mainIMGURL,
-                DateActivated = newShoe.dateActivated,
-                DateAdded = DateTime.Now.Date
+                RecipientName = address.RecipientName,
+                RecipientPhone = address.RecipientPhone,
+                Street_Address = address.StreetAddress,
+                ComplexOrBuilding = address.ComplexOrBuilding,
+                Surburb = address.Suburb,
+                CityOrTown = address.CityOrTown,
+                Province = address.Province,
+                PostalCode = address.PostalCode,
+                CustomerID = address.CustomerID,
+                IsActive = true,
             };
-
-            db.Shoes.InsertOnSubmit(shoeToInsert);
+            db.CustomerDeliveryAddresses.InsertOnSubmit(customerAddress);
             try
             {
                 db.SubmitChanges();
                 return true;
             } catch(Exception e)
             {
+                e.GetBaseException();
                 return false;
             }
-       */
-            return true;  
         }
-        List<CatalogDisplayShoe> IService1.GetActiveShoesCatalog()
+
+        bool IService1.InsertBrand(Brand newBrand)
         {
-            dynamic shoes = (from s in db.Shoes
-                             where s.IsAvailable.Equals(1)
-                             select s).DefaultIfEmpty();
-
-            if (shoes == null)
-                return null;
-            List<CatalogDisplayShoe> shoeCatalog = new List<CatalogDisplayShoe>();
-            foreach(Shoe shoe in shoes)
-            {
-                if(shoe != null)
-                {
-                    CatalogDisplayShoe s = new CatalogDisplayShoe(shoe.Id, shoe.Product.Name, shoe.Product.Name, shoe.Price, shoe.DiscountPercentage, shoe.MainImgURL, shoe.Gender, shoe.Product.Category.Name);
-                    shoeCatalog.Add(s);
-                }
-            }
-
-            return shoes;
+            throw new NotImplementedException();
         }
-        bool IService1.InsertProduct(ProductDTO newProduct)
+
+        bool IService1.InsertGender(Gender newGender)
         {
-            var product = (from p in db.Products
-                        where p.Name.Equals(newProduct.getName()) && p.Description.Equals(newProduct.getDescription())
-                        select p).FirstOrDefault();
-
-            if (product != null)
-                return false;
-            // setup the shoe brand
-            var brand = (from b in db.Brands
-                         where b.Id.Equals(newProduct.getBrandID())
-                         select b).FirstOrDefault();
-            if (brand == null)
-                return false;
-
-
-            var prod = new Product
-            {
-                Name = newProduct.getName(),
-                BrandID = newProduct.getBrandID(),
-                Description = newProduct.getDescription(),
-                MainImgURL = newProduct.getMainIMGURL(),
-                CategoryID = newProduct.getCategoryID()
-            };
-
-            
-
-           
-           
-
-            // newShoe.DateAdded = DateTime.Now;
-            db.Products.InsertOnSubmit(prod);
-            try
-            {
-                db.SubmitChanges();
-                return true;
-            }
-            catch (Exception ex)
-            {
-                ex.GetBaseException();
-                return false;
-            }
-
+            throw new NotImplementedException();
         }
-        // colourways
-        bool IService1.InsertColourWay(Colourway newColourway)
+
+        bool IService1.InsertShoeColourway(Colourway newColourway)
         {
-            var colourway = (from c in db.Colourways
-                            where c.Name.Equals(newColourway.Name)
-                            select c).FirstOrDefault();
-            if (colourway != null)
-                return false;
-            newColourway.DateAdded = DateTime.Now;
-            db.Colourways.InsertOnSubmit(newColourway);
-            try
-            {
-                db.SubmitChanges();
-                return true;
-            }
-            catch (Exception e)
-            {
-                return false;
-            }
+            throw new NotImplementedException();
         }
-        // shoe sizes
+
+        bool IService1.InsertShoeCategory(Category newCategory)
+        {
+            throw new NotImplementedException();
+        }
+
         bool IService1.InsertShoeSize(ShoeSize newShoeSize)
         {
-            var shoeSize = (from s in db.ShoeSizes
-                         where s.SizeTag.Equals(newShoeSize.SizeTag) && s.System.Equals(newShoeSize.System)
-                         select s).FirstOrDefault();
-            if (shoeSize != null) 
-                return false;
-
-            db.ShoeSizes.InsertOnSubmit(newShoeSize);
-            try
-            {
-                db.SubmitChanges();
-                return true;
-            }
-            catch (Exception e)
-            {
-                return false;
-            }
-            
+            throw new NotImplementedException();
         }
-        // brands
-        bool IService1.InsertShoeBrand(Brand newBrand)
+
+        bool IService1.InsertProduct(Product newProduct)
         {
-            var brand = (from b in db.Brands
-                         where b.Name.Equals(newBrand.Name) && b.Description.Equals(newBrand.Description)
-                         select b).FirstOrDefault();
-            if (brand != null) return false;
-
-            db.Brands.InsertOnSubmit(newBrand);
-            try
-            {
-                db.SubmitChanges();
-                return true;
-            }
-            catch (Exception e)
-            {
-                return false;
-            }
-
+            throw new NotImplementedException();
         }
-        List<Brand> IService1.GetActiveShoeBrands()
+
+        CustomerAddress IService1.getCustomerAddress(int customerID)
         {
-            dynamic brands = (from b in db.Brands
-                              where b.IsActive.Equals(1)
-                              select b).DefaultIfEmpty();
-            if (brands == null)
+            var address = (from a in db.CustomerDeliveryAddresses
+                           where a.CustomerID.Equals(customerID)
+                           select a).FirstOrDefault();
+
+            if (address == null)
                 return null;
-            List<Brand> shoeBrands = new List<Brand>();
 
-            foreach (Brand b in brands)
-            {
-                if (b != null)
-                    shoeBrands.Add(b);
-            }
-
-            return shoeBrands;
+            return new CustomerAddress() {
+                Id = address.Id,
+                RecipientName = address.RecipientName,
+                RecipientPhone = address.RecipientPhone,
+                StreetAddress = address.Street_Address,
+                ComplexOrBuilding = address.ComplexOrBuilding,
+                Suburb =address.Surburb,
+                CityOrTown = address.CityOrTown,
+                Province = address.Province,
+                PostalCode = address.PostalCode
+            };
         }
-
-        // shoe categories
-        bool IService1.InsertShoeCategory(Category newShoeCategory)
-        {
-            var category = (from c in db.Categories
-                            where c.Name.Equals(newShoeCategory.Name)
-                            select c).FirstOrDefault();
-            if (category != null) return false;
-          //  newShoeCategory.IsAvailable = true;
-            db.Categories.InsertOnSubmit(newShoeCategory);
-            
-            
-            try
-            {
-                db.SubmitChanges();
-                return true;
-            }
-            catch (Exception e)
-            {
-                return false;
-            }
-        }
-
-        List<Category> IService1.GetAvailableShoeCategories()
-        {
-            dynamic categories = (from c in db.Categories
-                                  where c.IsAvailable.Equals(1)
-                                  select c).DefaultIfEmpty();
-            if (categories == null)
-                return null;
-            List<Category> shoeCategories = new List<Category>();
-
-            foreach (Category c in categories)
-            {
-                if (c != null)
-                    shoeCategories.Add(c);
-            }
-
-            return shoeCategories;
-        }
-
     }
-
-   
-
-
-
-
 
 }
