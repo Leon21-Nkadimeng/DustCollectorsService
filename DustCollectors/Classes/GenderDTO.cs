@@ -6,15 +6,13 @@ using System.Runtime.Serialization;
 namespace DustCollectors.Classes
 {
     [DataContract]
-    public class BrandInfo
+    public class GenderDTO
     {
+        [DataMember]
+        public int Id { get; set; }
         [DataMember]
         public string name { get; set; }
         [DataMember]
-        public string description { get; set; }
-        [DataMember]
-        public string mailLogoURL { get; set; }
-        [DataMember]
-        public bool isActive { get; set; }
+        public string ageGroup { get; set; }
     }
 }

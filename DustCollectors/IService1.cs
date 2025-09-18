@@ -14,9 +14,29 @@ namespace DustCollectors
     [ServiceContract]
     public interface IService1
     {
-        
+        /** create methods */
         [OperationContract]
         bool IsReg(SysUser user);
+        [OperationContract]
+        bool InsertAddress(CustomerAddress address);
+        [OperationContract]
+        bool InsertShoeColourway(ColourwayDTO newColourway);
+        [OperationContract]
+        bool InsertShoeCategory(CategoryDTO newCategory);
+        [OperationContract]
+        bool InsertShoeSize(ShoeSizeDTO newShoeSize);
+        [OperationContract]
+        bool InsertProduct(ProductDTO newProduct);
+        [OperationContract]
+        bool InsertBrand(BrandDTO newBrand);
+        [OperationContract]
+        bool InsertGender(GenderDTO newGender);
+        [OperationContract]
+        bool InsertShoe(ShoeDTO newShoe);
+        [OperationContract]
+        bool InsertShoeVariant(ShoeVariantDTO newShoeVariant);
+
+        /** retrieval methods */
         [OperationContract]
         UserSessionDetails GetUserSessionDetails(string email, string password);
         [OperationContract]
@@ -25,23 +45,30 @@ namespace DustCollectors
         string GetUserPassword(int UserId);
         [OperationContract]
         List<CustomerAddress> GetCustomerAddresses(int userID);
-
-        [OperationContract]
-        bool InsertAddress(CustomerAddressInsert address);
         [OperationContract]
         CustomerAddress getCustomerAddress(int customerID);
-        bool InsertBrand(Brand newBrand);
         [OperationContract]
-        bool InsertGender(Gender newGender);
+        List<BrandDTO> getBrands(bool isActive);
         [OperationContract]
-        bool InsertShoeColourway(Colourway newColourway);
+        List<CategoryDTO> getCategories(bool isAvailable);
         [OperationContract]
-        bool InsertShoeCategory(Category newCategory);
+        List<ColourwayDTO> getColourways();
         [OperationContract]
-        bool InsertShoeSize(ShoeSize newShoeSize);
+        List<GenderDTO> getGenders();
+        [OperationContract]
+        List<ShoeSizeDTO> getShoeSizes();
+        [OperationContract]
+        List<SysUserDTO> getUsers(bool isActive);
 
+
+        /** update methods */
         [OperationContract]
-        bool InsertProduct(Product newProduct);
+        bool updateUserPassword(int userID, string newPassword);
+
+        /** Delete methods */
+        [OperationContract]
+        bool deleteAddress(int addressID);
+       
     }
 
 

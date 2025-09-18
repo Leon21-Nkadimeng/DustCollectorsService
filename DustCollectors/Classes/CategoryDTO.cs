@@ -3,15 +3,18 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 using System.Runtime.Serialization;
-
 namespace DustCollectors.Classes
 {
     [DataContract]
-    public class ShoeSizeInfo
+    public class CategoryDTO
     {
         [DataMember]
-        public string sizeTag { get; set; }
+        public int id { get; set; }
         [DataMember]
-        public string system { get; set; }
+        public string name {get; set;}
+      
+        [DataMember]
+        public bool isAvailable { get; set; }
+
     }
 }

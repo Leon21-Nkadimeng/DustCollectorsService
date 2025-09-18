@@ -3,17 +3,17 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 using System.Runtime.Serialization;
+
 namespace DustCollectors.Classes
 {
     [DataContract]
-    public class CategoryInfo
+    public class ShoeSizeDTO
     {
         [DataMember]
-        public string name {get; set;}
+        public int Id { get; set; }
         [DataMember]
-        public int superCategoryID { get; set; }
+        public string SizeTag { get; set; }
         [DataMember]
-        public bool isAvailable { get; set; }
-
+        public string System { get; set; }
     }
 }

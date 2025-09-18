@@ -27,5 +27,7 @@ namespace DustCollectors.Classes
         public string Province { get; set; }
         [DataMember]
         public string PostalCode { get; set; }
+        [DataMember]
+        public int CustomerID { get; set; }
     }
 }

@@ -6,9 +6,12 @@ using System.Runtime.Serialization;
 namespace DustCollectors
 {
     [DataContract]
-    public class ColourwayInfo
+    public class ColourwayDTO
     {
         [DataMember]
+        public int id { get; set; }
+        [DataMember]
         public string name { get; set; }
+        
     }
 }

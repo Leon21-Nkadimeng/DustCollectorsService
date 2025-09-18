@@ -80,15 +80,18 @@
     <Content Include="Web.config" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Classes\BrandInfo.cs" />
-    <Compile Include="Classes\CategoryInfo.cs" />
+    <Compile Include="Classes\BrandDTO.cs" />
+    <Compile Include="Classes\CategoryDTO.cs" />
     <Compile Include="Classes\CustomerAddress.cs" />
-    <Compile Include="Classes\CustomerAddressInsert.cs" />
-    <Compile Include="Classes\GenderInfo.cs" />
-    <Compile Include="Classes\ShoeSizeInfo.cs" />
+    <Compile Include="Classes\GenderDTO.cs" />
+    <Compile Include="Classes\ProductDTO.cs" />
+    <Compile Include="Classes\ShoeDTO.cs" />
+    <Compile Include="Classes\ShoeSizeDTO.cs" />
+    <Compile Include="Classes\ShoeVariantDTO.cs" />
+    <Compile Include="Classes\SysUserDTO.cs" />
     <Compile Include="Classes\UserPersonalDetails.cs" />
     <Compile Include="Classes\UserSessionDetails.cs" />
-    <Compile Include="Classes\ColourwayInfo.cs" />
+    <Compile Include="Classes\ColourwayDTO.cs" />
     <Compile Include="DustCollectorsDBDataClasses.designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
