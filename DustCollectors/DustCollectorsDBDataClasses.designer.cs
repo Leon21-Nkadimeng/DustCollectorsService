@@ -60,15 +60,9 @@ namespace DustCollectors
     partial void InsertCart(Cart instance);
     partial void UpdateCart(Cart instance);
     partial void DeleteCart(Cart instance);
-    partial void InsertOrderItem(OrderItem instance);
-    partial void UpdateOrderItem(OrderItem instance);
-    partial void DeleteOrderItem(OrderItem instance);
     partial void InsertInvoice(Invoice instance);
     partial void UpdateInvoice(Invoice instance);
     partial void DeleteInvoice(Invoice instance);
-    partial void InsertCustomerOrder(CustomerOrder instance);
-    partial void UpdateCustomerOrder(CustomerOrder instance);
-    partial void DeleteCustomerOrder(CustomerOrder instance);
     #endregion
 		
 		public DustCollectorsDBDataClassesDataContext() : 
@@ -181,27 +175,11 @@ namespace DustCollectors
 			}
 		}
 		
-		public System.Data.Linq.Table<OrderItem> OrderItems
-		{
-			get
-			{
-				return this.GetTable<OrderItem>();
-			}
-		}
-		
 		public System.Data.Linq.Table<Invoice> Invoices
 		{
 			get
 			{
 				return this.GetTable<Invoice>();
-			}
-		}
-		
-		public System.Data.Linq.Table<CustomerOrder> CustomerOrders
-		{
-			get
-			{
-				return this.GetTable<CustomerOrder>();
 			}
 		}
 	}
@@ -768,7 +746,7 @@ namespace DustCollectors
 		
 		private bool _IsActive;
 		
-		private EntitySet<CustomerOrder> _CustomerOrders;
+		private EntitySet<Invoice> _Invoices;
 		
 		private EntityRef<SysUser> _SysUser;
 		
@@ -802,7 +780,7 @@ namespace DustCollectors
 		
 		public CustomerDeliveryAddress()
 		{
-			this._CustomerOrders = new EntitySet<CustomerOrder>(new Action<CustomerOrder>(this.attach_CustomerOrders), new Action<CustomerOrder>(this.detach_CustomerOrders));
+			this._Invoices = new EntitySet<Invoice>(new Action<Invoice>(this.attach_Invoices), new Action<Invoice>(this.detach_Invoices));
 			this._SysUser = default(EntityRef<SysUser>);
 			OnCreated();
 		}
@@ -1031,16 +1009,16 @@ namespace DustCollectors
 			}
 		}
 		
-		[global::System.Data.Linq.Mapping.AssociationAttribute(Name="CustomerDeliveryAddress_CustomerOrder", Storage="_CustomerOrders", ThisKey="Id", OtherKey="ShippingAddressID")]
-		public EntitySet<CustomerOrder> CustomerOrders
+		[global::System.Data.Linq.Mapping.AssociationAttribute(Name="CustomerDeliveryAddress_Invoice", Storage="_Invoices", ThisKey="Id", OtherKey="ShippingAddressID")]
+		public EntitySet<Invoice> Invoices
 		{
 			get
 			{
-				return this._CustomerOrders;
+				return this._Invoices;
 			}
 			set
 			{
-				this._CustomerOrders.Assign(value);
+				this._Invoices.Assign(value);
 			}
 		}
 		
@@ -1098,13 +1076,13 @@ namespace DustCollectors
 			}
 		}
 		
-		private void attach_CustomerOrders(CustomerOrder entity)
+		private void attach_Invoices(Invoice entity)
 		{
 			this.SendPropertyChanging();
 			entity.CustomerDeliveryAddress = this;
 		}
 		
-		private void detach_CustomerOrders(CustomerOrder entity)
+		private void detach_Invoices(Invoice entity)
 		{
 			this.SendPropertyChanging();
 			entity.CustomerDeliveryAddress = null;
@@ -2180,7 +2158,7 @@ namespace DustCollectors
 		
 		private EntitySet<Cart> _Carts;
 		
-		private EntitySet<CustomerOrder> _CustomerOrders;
+		private EntitySet<Invoice> _Invoices;
 		
     #region Extensibility Method Definitions
     partial void OnLoaded();
@@ -2210,7 +2188,7 @@ namespace DustCollectors
 		{
 			this._CustomerDeliveryAddresses = new EntitySet<CustomerDeliveryAddress>(new Action<CustomerDeliveryAddress>(this.attach_CustomerDeliveryAddresses), new Action<CustomerDeliveryAddress>(this.detach_CustomerDeliveryAddresses));
 			this._Carts = new EntitySet<Cart>(new Action<Cart>(this.attach_Carts), new Action<Cart>(this.detach_Carts));
-			this._CustomerOrders = new EntitySet<CustomerOrder>(new Action<CustomerOrder>(this.attach_CustomerOrders), new Action<CustomerOrder>(this.detach_CustomerOrders));
+			this._Invoices = new EntitySet<Invoice>(new Action<Invoice>(this.attach_Invoices), new Action<Invoice>(this.detach_Invoices));
 			OnCreated();
 		}
 		
@@ -2420,16 +2398,16 @@ namespace DustCollectors
 			}
 		}
 		
-		[global::System.Data.Linq.Mapping.AssociationAttribute(Name="SysUser_CustomerOrder", Storage="_CustomerOrders", ThisKey="Id", OtherKey="CustomerID")]
-		public EntitySet<CustomerOrder> CustomerOrders
+		[global::System.Data.Linq.Mapping.AssociationAttribute(Name="SysUser_Invoice", Storage="_Invoices", ThisKey="Id", OtherKey="CustomerID")]
+		public EntitySet<Invoice> Invoices
 		{
 			get
 			{
-				return this._CustomerOrders;
+				return this._Invoices;
 			}
 			set
 			{
-				this._CustomerOrders.Assign(value);
+				this._Invoices.Assign(value);
 			}
 		}
 		
@@ -2477,13 +2455,13 @@ namespace DustCollectors
 			entity.SysUser = null;
 		}
 		
-		private void attach_CustomerOrders(CustomerOrder entity)
+		private void attach_Invoices(Invoice entity)
 		{
 			this.SendPropertyChanging();
 			entity.SysUser = this;
 		}
 		
-		private void detach_CustomerOrders(CustomerOrder entity)
+		private void detach_Invoices(Invoice entity)
 		{
 			this.SendPropertyChanging();
 			entity.SysUser = null;
@@ -2682,358 +2660,8 @@ namespace DustCollectors
 		}
 	}
 	
-	[global::System.Data.Linq.Mapping.TableAttribute(Name="dbo.OrderItem")]
-	public partial class OrderItem : INotifyPropertyChanging, INotifyPropertyChanged
-	{
-		
-		private static PropertyChangingEventArgs emptyChangingEventArgs = new PropertyChangingEventArgs(String.Empty);
-		
-		private int _OrderId;
-		
-		private string _ItemName;
-		
-		private int _QTY;
-		
-		private decimal _UnitPrice;
-		
-		private decimal _TotalPrice;
-		
-		private EntityRef<CustomerOrder> _CustomerOrder;
-		
-    #region Extensibility Method Definitions
-    partial void OnLoaded();
-    partial void OnValidate(System.Data.Linq.ChangeAction action);
-    partial void OnCreated();
-    partial void OnOrderIdChanging(int value);
-    partial void OnOrderIdChanged();
-    partial void OnItemNameChanging(string value);
-    partial void OnItemNameChanged();
-    partial void OnQTYChanging(int value);
-    partial void OnQTYChanged();
-    partial void OnUnitPriceChanging(decimal value);
-    partial void OnUnitPriceChanged();
-    partial void OnTotalPriceChanging(decimal value);
-    partial void OnTotalPriceChanged();
-    #endregion
-		
-		public OrderItem()
-		{
-			this._CustomerOrder = default(EntityRef<CustomerOrder>);
-			OnCreated();
-		}
-		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_OrderId", AutoSync=AutoSync.OnInsert, DbType="Int NOT NULL IDENTITY", IsPrimaryKey=true, IsDbGenerated=true)]
-		public int OrderId
-		{
-			get
-			{
-				return this._OrderId;
-			}
-			set
-			{
-				if ((this._OrderId != value))
-				{
-					if (this._CustomerOrder.HasLoadedOrAssignedValue)
-					{
-						throw new System.Data.Linq.ForeignKeyReferenceAlreadyHasValueException();
-					}
-					this.OnOrderIdChanging(value);
-					this.SendPropertyChanging();
-					this._OrderId = value;
-					this.SendPropertyChanged("OrderId");
-					this.OnOrderIdChanged();
-				}
-			}
-		}
-		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_ItemName", DbType="VarChar(100) NOT NULL", CanBeNull=false)]
-		public string ItemName
-		{
-			get
-			{
-				return this._ItemName;
-			}
-			set
-			{
-				if ((this._ItemName != value))
-				{
-					this.OnItemNameChanging(value);
-					this.SendPropertyChanging();
-					this._ItemName = value;
-					this.SendPropertyChanged("ItemName");
-					this.OnItemNameChanged();
-				}
-			}
-		}
-		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_QTY", DbType="Int NOT NULL")]
-		public int QTY
-		{
-			get
-			{
-				return this._QTY;
-			}
-			set
-			{
-				if ((this._QTY != value))
-				{
-					this.OnQTYChanging(value);
-					this.SendPropertyChanging();
-					this._QTY = value;
-					this.SendPropertyChanged("QTY");
-					this.OnQTYChanged();
-				}
-			}
-		}
-		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_UnitPrice", DbType="Decimal(18,2) NOT NULL")]
-		public decimal UnitPrice
-		{
-			get
-			{
-				return this._UnitPrice;
-			}
-			set
-			{
-				if ((this._UnitPrice != value))
-				{
-					this.OnUnitPriceChanging(value);
-					this.SendPropertyChanging();
-					this._UnitPrice = value;
-					this.SendPropertyChanged("UnitPrice");
-					this.OnUnitPriceChanged();
-				}
-			}
-		}
-		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_TotalPrice", DbType="Decimal(18,2) NOT NULL")]
-		public decimal TotalPrice
-		{
-			get
-			{
-				return this._TotalPrice;
-			}
-			set
-			{
-				if ((this._TotalPrice != value))
-				{
-					this.OnTotalPriceChanging(value);
-					this.SendPropertyChanging();
-					this._TotalPrice = value;
-					this.SendPropertyChanged("TotalPrice");
-					this.OnTotalPriceChanged();
-				}
-			}
-		}
-		
-		[global::System.Data.Linq.Mapping.AssociationAttribute(Name="CustomerOrder_OrderItem", Storage="_CustomerOrder", ThisKey="OrderId", OtherKey="Id", IsForeignKey=true)]
-		public CustomerOrder CustomerOrder
-		{
-			get
-			{
-				return this._CustomerOrder.Entity;
-			}
-			set
-			{
-				CustomerOrder previousValue = this._CustomerOrder.Entity;
-				if (((previousValue != value) 
-							|| (this._CustomerOrder.HasLoadedOrAssignedValue == false)))
-				{
-					this.SendPropertyChanging();
-					if ((previousValue != null))
-					{
-						this._CustomerOrder.Entity = null;
-						previousValue.OrderItem = null;
-					}
-					this._CustomerOrder.Entity = value;
-					if ((value != null))
-					{
-						value.OrderItem = this;
-						this._OrderId = value.Id;
-					}
-					else
-					{
-						this._OrderId = default(int);
-					}
-					this.SendPropertyChanged("CustomerOrder");
-				}
-			}
-		}
-		
-		public event PropertyChangingEventHandler PropertyChanging;
-		
-		public event PropertyChangedEventHandler PropertyChanged;
-		
-		protected virtual void SendPropertyChanging()
-		{
-			if ((this.PropertyChanging != null))
-			{
-				this.PropertyChanging(this, emptyChangingEventArgs);
-			}
-		}
-		
-		protected virtual void SendPropertyChanged(String propertyName)
-		{
-			if ((this.PropertyChanged != null))
-			{
-				this.PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
-			}
-		}
-	}
-	
 	[global::System.Data.Linq.Mapping.TableAttribute(Name="dbo.Invoice")]
 	public partial class Invoice : INotifyPropertyChanging, INotifyPropertyChanged
-	{
-		
-		private static PropertyChangingEventArgs emptyChangingEventArgs = new PropertyChangingEventArgs(String.Empty);
-		
-		private int _Id;
-		
-		private int _OrderId;
-		
-		private System.DateTime _DueDate;
-		
-		private EntityRef<CustomerOrder> _CustomerOrder;
-		
-    #region Extensibility Method Definitions
-    partial void OnLoaded();
-    partial void OnValidate(System.Data.Linq.ChangeAction action);
-    partial void OnCreated();
-    partial void OnIdChanging(int value);
-    partial void OnIdChanged();
-    partial void OnOrderIdChanging(int value);
-    partial void OnOrderIdChanged();
-    partial void OnDueDateChanging(System.DateTime value);
-    partial void OnDueDateChanged();
-    #endregion
-		
-		public Invoice()
-		{
-			this._CustomerOrder = default(EntityRef<CustomerOrder>);
-			OnCreated();
-		}
-		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_Id", AutoSync=AutoSync.OnInsert, DbType="Int NOT NULL IDENTITY", IsPrimaryKey=true, IsDbGenerated=true)]
-		public int Id
-		{
-			get
-			{
-				return this._Id;
-			}
-			set
-			{
-				if ((this._Id != value))
-				{
-					this.OnIdChanging(value);
-					this.SendPropertyChanging();
-					this._Id = value;
-					this.SendPropertyChanged("Id");
-					this.OnIdChanged();
-				}
-			}
-		}
-		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_OrderId", DbType="Int NOT NULL")]
-		public int OrderId
-		{
-			get
-			{
-				return this._OrderId;
-			}
-			set
-			{
-				if ((this._OrderId != value))
-				{
-					if (this._CustomerOrder.HasLoadedOrAssignedValue)
-					{
-						throw new System.Data.Linq.ForeignKeyReferenceAlreadyHasValueException();
-					}
-					this.OnOrderIdChanging(value);
-					this.SendPropertyChanging();
-					this._OrderId = value;
-					this.SendPropertyChanged("OrderId");
-					this.OnOrderIdChanged();
-				}
-			}
-		}
-		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_DueDate", DbType="Date NOT NULL")]
-		public System.DateTime DueDate
-		{
-			get
-			{
-				return this._DueDate;
-			}
-			set
-			{
-				if ((this._DueDate != value))
-				{
-					this.OnDueDateChanging(value);
-					this.SendPropertyChanging();
-					this._DueDate = value;
-					this.SendPropertyChanged("DueDate");
-					this.OnDueDateChanged();
-				}
-			}
-		}
-		
-		[global::System.Data.Linq.Mapping.AssociationAttribute(Name="CustomerOrder_Invoice", Storage="_CustomerOrder", ThisKey="OrderId", OtherKey="Id", IsForeignKey=true)]
-		public CustomerOrder CustomerOrder
-		{
-			get
-			{
-				return this._CustomerOrder.Entity;
-			}
-			set
-			{
-				CustomerOrder previousValue = this._CustomerOrder.Entity;
-				if (((previousValue != value) 
-							|| (this._CustomerOrder.HasLoadedOrAssignedValue == false)))
-				{
-					this.SendPropertyChanging();
-					if ((previousValue != null))
-					{
-						this._CustomerOrder.Entity = null;
-						previousValue.Invoices.Remove(this);
-					}
-					this._CustomerOrder.Entity = value;
-					if ((value != null))
-					{
-						value.Invoices.Add(this);
-						this._OrderId = value.Id;
-					}
-					else
-					{
-						this._OrderId = default(int);
-					}
-					this.SendPropertyChanged("CustomerOrder");
-				}
-			}
-		}
-		
-		public event PropertyChangingEventHandler PropertyChanging;
-		
-		public event PropertyChangedEventHandler PropertyChanged;
-		
-		protected virtual void SendPropertyChanging()
-		{
-			if ((this.PropertyChanging != null))
-			{
-				this.PropertyChanging(this, emptyChangingEventArgs);
-			}
-		}
-		
-		protected virtual void SendPropertyChanged(String propertyName)
-		{
-			if ((this.PropertyChanged != null))
-			{
-				this.PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
-			}
-		}
-	}
-	
-	[global::System.Data.Linq.Mapping.TableAttribute(Name="dbo.CustomerOrder")]
-	public partial class CustomerOrder : INotifyPropertyChanging, INotifyPropertyChanged
 	{
 		
 		private static PropertyChangingEventArgs emptyChangingEventArgs = new PropertyChangingEventArgs(String.Empty);
@@ -3046,15 +2674,15 @@ namespace DustCollectors
 		
 		private decimal _Total;
 		
-		private decimal _VATPercentage;
+		private decimal _VAT;
 		
 		private int _ShippingAddressID;
 		
 		private int _CustomerID;
 		
-		private EntityRef<OrderItem> _OrderItem;
+		private decimal _DeliveryFee;
 		
-		private EntitySet<Invoice> _Invoices;
+		private string _Status;
 		
 		private EntityRef<SysUser> _SysUser;
 		
@@ -3072,18 +2700,20 @@ namespace DustCollectors
     partial void OnSubtotalChanged();
     partial void OnTotalChanging(decimal value);
     partial void OnTotalChanged();
-    partial void OnVATPercentageChanging(decimal value);
-    partial void OnVATPercentageChanged();
+    partial void OnVATChanging(decimal value);
+    partial void OnVATChanged();
     partial void OnShippingAddressIDChanging(int value);
     partial void OnShippingAddressIDChanged();
     partial void OnCustomerIDChanging(int value);
     partial void OnCustomerIDChanged();
+    partial void OnDeliveryFeeChanging(decimal value);
+    partial void OnDeliveryFeeChanged();
+    partial void OnStatusChanging(string value);
+    partial void OnStatusChanged();
     #endregion
 		
-		public CustomerOrder()
+		public Invoice()
 		{
-			this._OrderItem = default(EntityRef<OrderItem>);
-			this._Invoices = new EntitySet<Invoice>(new Action<Invoice>(this.attach_Invoices), new Action<Invoice>(this.detach_Invoices));
 			this._SysUser = default(EntityRef<SysUser>);
 			this._CustomerDeliveryAddress = default(EntityRef<CustomerDeliveryAddress>);
 			OnCreated();
@@ -3169,22 +2799,22 @@ namespace DustCollectors
 			}
 		}
 		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_VATPercentage", DbType="Decimal(5,2) NOT NULL")]
-		public decimal VATPercentage
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_VAT", DbType="Decimal(18,2) NOT NULL")]
+		public decimal VAT
 		{
 			get
 			{
-				return this._VATPercentage;
+				return this._VAT;
 			}
 			set
 			{
-				if ((this._VATPercentage != value))
+				if ((this._VAT != value))
 				{
-					this.OnVATPercentageChanging(value);
+					this.OnVATChanging(value);
 					this.SendPropertyChanging();
-					this._VATPercentage = value;
-					this.SendPropertyChanged("VATPercentage");
-					this.OnVATPercentageChanged();
+					this._VAT = value;
+					this.SendPropertyChanged("VAT");
+					this.OnVATChanged();
 				}
 			}
 		}
@@ -3237,49 +2867,47 @@ namespace DustCollectors
 			}
 		}
 		
-		[global::System.Data.Linq.Mapping.AssociationAttribute(Name="CustomerOrder_OrderItem", Storage="_OrderItem", ThisKey="Id", OtherKey="OrderId", IsUnique=true, IsForeignKey=false)]
-		public OrderItem OrderItem
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_DeliveryFee", DbType="Decimal(10,2) NOT NULL")]
+		public decimal DeliveryFee
 		{
 			get
 			{
-				return this._OrderItem.Entity;
+				return this._DeliveryFee;
 			}
 			set
 			{
-				OrderItem previousValue = this._OrderItem.Entity;
-				if (((previousValue != value) 
-							|| (this._OrderItem.HasLoadedOrAssignedValue == false)))
+				if ((this._DeliveryFee != value))
 				{
+					this.OnDeliveryFeeChanging(value);
 					this.SendPropertyChanging();
-					if ((previousValue != null))
-					{
-						this._OrderItem.Entity = null;
-						previousValue.CustomerOrder = null;
-					}
-					this._OrderItem.Entity = value;
-					if ((value != null))
-					{
-						value.CustomerOrder = this;
-					}
-					this.SendPropertyChanged("OrderItem");
+					this._DeliveryFee = value;
+					this.SendPropertyChanged("DeliveryFee");
+					this.OnDeliveryFeeChanged();
 				}
 			}
 		}
 		
-		[global::System.Data.Linq.Mapping.AssociationAttribute(Name="CustomerOrder_Invoice", Storage="_Invoices", ThisKey="Id", OtherKey="OrderId")]
-		public EntitySet<Invoice> Invoices
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_Status", DbType="VarChar(50) NOT NULL", CanBeNull=false)]
+		public string Status
 		{
 			get
 			{
-				return this._Invoices;
+				return this._Status;
 			}
 			set
 			{
-				this._Invoices.Assign(value);
+				if ((this._Status != value))
+				{
+					this.OnStatusChanging(value);
+					this.SendPropertyChanging();
+					this._Status = value;
+					this.SendPropertyChanged("Status");
+					this.OnStatusChanged();
+				}
 			}
 		}
 		
-		[global::System.Data.Linq.Mapping.AssociationAttribute(Name="SysUser_CustomerOrder", Storage="_SysUser", ThisKey="CustomerID", OtherKey="Id", IsForeignKey=true)]
+		[global::System.Data.Linq.Mapping.AssociationAttribute(Name="SysUser_Invoice", Storage="_SysUser", ThisKey="CustomerID", OtherKey="Id", IsForeignKey=true)]
 		public SysUser SysUser
 		{
 			get
@@ -3296,12 +2924,12 @@ namespace DustCollectors
 					if ((previousValue != null))
 					{
 						this._SysUser.Entity = null;
-						previousValue.CustomerOrders.Remove(this);
+						previousValue.Invoices.Remove(this);
 					}
 					this._SysUser.Entity = value;
 					if ((value != null))
 					{
-						value.CustomerOrders.Add(this);
+						value.Invoices.Add(this);
 						this._CustomerID = value.Id;
 					}
 					else
@@ -3313,7 +2941,7 @@ namespace DustCollectors
 			}
 		}
 		
-		[global::System.Data.Linq.Mapping.AssociationAttribute(Name="CustomerDeliveryAddress_CustomerOrder", Storage="_CustomerDeliveryAddress", ThisKey="ShippingAddressID", OtherKey="Id", IsForeignKey=true)]
+		[global::System.Data.Linq.Mapping.AssociationAttribute(Name="CustomerDeliveryAddress_Invoice", Storage="_CustomerDeliveryAddress", ThisKey="ShippingAddressID", OtherKey="Id", IsForeignKey=true)]
 		public CustomerDeliveryAddress CustomerDeliveryAddress
 		{
 			get
@@ -3330,12 +2958,12 @@ namespace DustCollectors
 					if ((previousValue != null))
 					{
 						this._CustomerDeliveryAddress.Entity = null;
-						previousValue.CustomerOrders.Remove(this);
+						previousValue.Invoices.Remove(this);
 					}
 					this._CustomerDeliveryAddress.Entity = value;
 					if ((value != null))
 					{
-						value.CustomerOrders.Add(this);
+						value.Invoices.Add(this);
 						this._ShippingAddressID = value.Id;
 					}
 					else
@@ -3365,18 +2993,6 @@ namespace DustCollectors
 			{
 				this.PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
 			}
-		}
-		
-		private void attach_Invoices(Invoice entity)
-		{
-			this.SendPropertyChanging();
-			entity.CustomerOrder = this;
-		}
-		
-		private void detach_Invoices(Invoice entity)
-		{
-			this.SendPropertyChanging();
-			entity.CustomerOrder = null;
 		}
 	}
 }

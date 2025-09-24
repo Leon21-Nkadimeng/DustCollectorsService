@@ -282,56 +282,27 @@ namespace DustCollectors
             }
         }
 
-        bool IService1.placeOrder(List<CartProduct> cartProducts, decimal VAT, decimal subTotal, decimal grandTotal, int userId, int addressId)
+        int IService1.createInvoice(int userID, int addressID,  decimal subtotal, decimal vat, decimal deliveryfee, decimal grandTot)
         {
-
-            var order = new CustomerOrder()
+            var invoice = new Invoice
             {
+                CustomerID = userID,
                 Date = DateTime.Now,
-                Subtotal = subTotal,
-
-                VATPercentage = VAT,
-                Total = grandTotal,
-                ShippingAddressID = addressId,
-                CustomerID = userId
-
+                Subtotal = subtotal,
+                VAT = vat,
+                DeliveryFee = deliveryfee,
+                Total = grandTot,
+                Status = "Pending",
+                ShippingAddressID = addressID
             };
+           
+            db.Invoices.InsertOnSubmit(invoice);
+      
+            db.SubmitChanges();
 
-            db.CustomerOrders.InsertOnSubmit(order);
+            return invoice.Id;
 
-            foreach (CartProduct p in cartProducts)
-            {
-                if (p != null)
-                {
-                    var item = new OrderItem()
-                    {
-                        CustomerOrder = order,
-                        ItemName = p.name,
-                        QTY = p.QTY,
-                        UnitPrice = p.Price,
-                        TotalPrice = p.Price * p.QTY
-                    };
-                    db.OrderItems.InsertOnSubmit(item);
-
-                }
-            }
-
-            db.Invoices.InsertOnSubmit(new Invoice()
-            {
-                CustomerOrder = order,
-                DueDate = DateTime.Now
-            });
-
-            try
-            {
-                db.SubmitChanges();
-                return true;
-            } catch(Exception ex)
-            {
-                return false;
-            }
         }
-
         /** Retrieval methods */
         List<Product> getProds()
         {
@@ -935,10 +906,55 @@ namespace DustCollectors
             }
             return regusers;
         }
-        List<DisplayProdCatalog> getProductsByCategory(int categoryId)
+        List<DisplayProdCatalog> IService1.getProductsByCategory(int categoryId)
         {
+            dynamic prods = null;
+            if (categoryId < 0) { 
+                prods = (from p in db.Products
+                         where p.IsAvailable.Equals(1)
+                         select p).DefaultIfEmpty();
+            } 
+            else
+            {
+                prods = (from p in db.Products
+                         where p.CategoryID.Equals(categoryId) && p.IsAvailable.Equals(1)
+                         select p).DefaultIfEmpty();
+            }
+             
+
+            if(prods == null)
+            {
+                return null;
+            }
+            List<DisplayProdCatalog> products = new List<DisplayProdCatalog>();
+            foreach(Product p in prods)
+            {
+                if(p != null)
+                {
+                    products.Add(new DisplayProdCatalog()
+                    {
+                        Id = p.Id,
+                        Name = p.Name,
+                        BrandName = p.Brand.Name,
+                        Price = p.Price,
+                        colourway = p.Colourway.Name,
+                        gender = p.Gender.Name + " (" + p.Gender.AgeGroup + ")",
+                        categoryId = p.CategoryID,
+                        genderId = p.GenderID,
+                        colourwayId = p.ColourwayID ,
+                        BrandID= p.BrandID,
+                        mainImageURL = p.MainImgURL
+                    });
+                   
+                }
+            }
+
+            return products;
+        }
+
+        List<DisplayProdCatalog> IService1.getProductsByGender(int genderId) { 
             dynamic prods = (from p in db.Products
-                             where p.CategoryID.Equals(categoryId)&&p.IsAvailable.Equals(1)
+                             where p.GenderID.Equals(genderId) && p.IsAvailable.Equals(1)
                              select p).DefaultIfEmpty();
 
             if(prods == null)
@@ -946,31 +962,65 @@ namespace DustCollectors
                 return null;
             }
             List<DisplayProdCatalog> products = new List<DisplayProdCatalog>();
-
             foreach(Product p in prods)
             {
                 if(p != null)
                 {
-                    products.Add(new DisplayProdCatalog() { 
-                         Id = p.Id,
-                         Name = p.Name,
-                         BrandName = p.Brand.Name,
-                         //colourway = 
+                    products.Add(new DisplayProdCatalog()
+                    {
+                        Id = p.Id,
+                        Name = p.Name,
+                        BrandName = p.Brand.Name,
+                        Price = p.Price,
+                        colourway = p.Colourway.Name,
+                        gender = p.Gender.Name + " (" + p.Gender.AgeGroup + ")",
+                        categoryId = p.CategoryID,
+                        genderId = p.GenderID,
+                        colourwayId = p.ColourwayID ,
+                        BrandID = p.BrandID,
+                        mainImageURL = p.MainImgURL
                     });
+                   
+                }
+}
+
+return products;
+        }
+       
+        List<DisplayProdCatalog> IService1.getProductsByColourway(int colourwayId)
+        {
+            dynamic prods = (from p in db.Products
+                             where p.ColourwayID.Equals(colourwayId) && p.IsAvailable.Equals(1)
+                             select p).DefaultIfEmpty();
+
+            if (prods == null)
+            {
+                return null;
+            }
+            List<DisplayProdCatalog> products = new List<DisplayProdCatalog>();
+            foreach (Product p in prods)
+            {
+                if (p != null)
+                {
+                    products.Add(new DisplayProdCatalog()
+                    {
+                        Id = p.Id,
+                        Name = p.Name,
+                        BrandName = p.Brand.Name,
+                        Price = p.Price,
+                        colourway = p.Colourway.Name,
+                        gender = p.Gender.Name + " (" + p.Gender.AgeGroup + ")",
+                        categoryId = p.CategoryID,
+                        genderId = p.GenderID,
+                        colourwayId = p.ColourwayID,
+                        BrandID = p.BrandID,
+                        mainImageURL = p.MainImgURL
+                    });
+
                 }
             }
 
             return products;
-        }
-      
-        List<DisplayProdCatalog> getProductsByGender(int categoryId)
-        {
-            return null;
-        }
-       
-        List<DisplayProdCatalog> getProductsByColourway(int categoryId)
-        {
-            return null;
         }
 
         /** Update methods */
@@ -1003,19 +1053,19 @@ namespace DustCollectors
                 return "Product does not exist";
           
             // edit the product
-            if (!prodToEdit.Name.Equals(product.Name))
+           
                 prodToEdit.Name = product.Name;
-            if (!prodToEdit.MainImgURL.Equals(product.MainImgURL))
+            
                 prodToEdit.MainImgURL = product.MainImgURL;
-            if (!prodToEdit.IsAvailable.Equals(product.isActive))
+        
                 prodToEdit.IsAvailable = product.isActive;
-            if (!prodToEdit.Price.Equals(product.Price))
+        
                 prodToEdit.Price = product.Price;
-            if (!prodToEdit.ColourwayID.Equals(product.ColourwayID))
+         
                 prodToEdit.ColourwayID = product.ColourwayID;
-            if (!prodToEdit.GenderID.Equals(product.GenderID))
+         
                 prodToEdit.CategoryID = (product.CategoryID);
-            if (!product.isActive.Equals(prodToEdit.IsAvailable))
+        
                 prodToEdit.IsAvailable = product.isActive;
 
 
@@ -1233,6 +1283,69 @@ namespace DustCollectors
                 return false;
             }
         }
+        bool IService1.updateCartItem(int sizeId, int userId, int qty)
+        {
+            var cartItem = (from p in db.Carts
+                            where p.SizeID.Equals(sizeId) && p.UserID.Equals(userId)
+                            select p).FirstOrDefault();
+            if (cartItem == null)
+                return false;
+
+            if (qty > cartItem.ProductSize.AmountInStock)
+                return false;
+            cartItem.QTY = qty;
+
+            try
+            {
+                db.SubmitChanges();
+                return true;
+            }catch(Exception e)
+            {
+                return false;
+            }
+            
+        }
+        bool IService1.activateGenderCategory(int id)
+        {
+            var genderCategory = (from g in db.Genders
+                                  where g.Id.Equals(id)
+                                  select g).FirstOrDefault();
+
+            if (genderCategory == null)
+                return false;
+            genderCategory.IsAvailable = true;
+
+            try
+            {
+                db.SubmitChanges();
+                return true;
+            }catch(Exception e)
+            {
+                return false;
+            }
+        }
+        bool IService1.updateQTYS(List<CartProduct> cartItems) 
+        {
+            foreach(CartProduct c in cartItems)
+            {
+                if(c != null)
+                {
+                    var cartprod = (from p in db.ProductSizes
+                                    where p.Id.Equals(c.SizeID)
+                                    select p).FirstOrDefault();
+                    if (cartprod != null)
+                        cartprod.AmountInStock -= c.QTY;
+                }
+            }
+
+            try
+            {
+                db.SubmitChanges();
+                return true;
+            }catch(Exception e)
+            { return false;
+            }
+        }
         /** Delete methods */
         bool IService1.deleteAddress(int addressID)
         {
@@ -1415,7 +1528,7 @@ namespace DustCollectors
             if (cartItems == null)
                 return false;
 
-            foreach(CartProduct c in cartItems)
+            foreach(Cart c in cartItems)
             {
                 if(c != null)
                 {
@@ -1455,30 +1568,28 @@ namespace DustCollectors
                 return false;
             }
         }
-        int IService1.countSizesInStock(int prodId)
-        {
-            var sizes = (from s in db.ProductSizes
-                             where s.ProductID.Equals(prodId)
-                             select s).Count();
-            return sizes;
 
-           
+        bool IService1.removeShoeSize(int sizeId)
+        {
+            var size = (from s in db.ProductSizes
+                        where s.Id.Equals(sizeId)
+                        select s).FirstOrDefault();
+            if (size == null)
+                return false;
+            db.ProductSizes.DeleteOnSubmit(size);
+            try
+            {
+                db.SubmitChanges();
+                return true;
+            } 
+            catch(Exception ex)
+            {
+                return false;
+            }
         }
 
-        List<DisplayProdCatalog> IService1.getProductsByCategory(int categoryId)
-        {
-            throw new NotImplementedException();
-        }
 
-        List<DisplayProdCatalog> IService1.getProductsByGender(int categoryId)
-        {
-            throw new NotImplementedException();
-        }
 
-        List<DisplayProdCatalog> IService1.getProductsByColourway(int categoryId)
-        {
-            throw new NotImplementedException();
-        }
     }
 
 }

@@ -42,7 +42,7 @@
       <Column Name="PostalCode" Type="System.String" DbType="VarChar(10) NOT NULL" CanBeNull="false" />
       <Column Name="CustomerID" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
       <Column Name="IsActive" Type="System.Boolean" DbType="Bit NOT NULL" CanBeNull="false" />
-      <Association Name="CustomerDeliveryAddress_CustomerOrder" Member="CustomerOrders" ThisKey="Id" OtherKey="ShippingAddressID" Type="CustomerOrder" />
+      <Association Name="CustomerDeliveryAddress_Invoice" Member="Invoices" ThisKey="Id" OtherKey="ShippingAddressID" Type="Invoice" />
       <Association Name="SysUser_CustomerDeliveryAddress" Member="SysUser" ThisKey="CustomerID" OtherKey="Id" Type="SysUser" IsForeignKey="true" />
     </Type>
   </Table>
@@ -108,7 +108,7 @@
       <Column Name="IsActive" Type="System.Boolean" DbType="Bit NOT NULL" CanBeNull="false" />
       <Association Name="SysUser_CustomerDeliveryAddress" Member="CustomerDeliveryAddresses" ThisKey="Id" OtherKey="CustomerID" Type="CustomerDeliveryAddress" />
       <Association Name="SysUser_Cart" Member="Carts" ThisKey="Id" OtherKey="UserID" Type="Cart" />
-      <Association Name="SysUser_CustomerOrder" Member="CustomerOrders" ThisKey="Id" OtherKey="CustomerID" Type="CustomerOrder" />
+      <Association Name="SysUser_Invoice" Member="Invoices" ThisKey="Id" OtherKey="CustomerID" Type="Invoice" />
     </Type>
   </Table>
   <Table Name="dbo.Cart" Member="Carts">
@@ -120,37 +120,19 @@
       <Association Name="SysUser_Cart" Member="SysUser" ThisKey="UserID" OtherKey="Id" Type="SysUser" IsForeignKey="true" />
     </Type>
   </Table>
-  <Table Name="dbo.OrderItem" Member="OrderItems">
-    <Type Name="OrderItem">
-      <Column Name="OrderId" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
-      <Column Name="ItemName" Type="System.String" DbType="VarChar(100) NOT NULL" CanBeNull="false" />
-      <Column Name="QTY" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
-      <Column Name="UnitPrice" Type="System.Decimal" DbType="Decimal(18,2) NOT NULL" CanBeNull="false" />
-      <Column Name="TotalPrice" Type="System.Decimal" DbType="Decimal(18,2) NOT NULL" CanBeNull="false" />
-      <Association Name="CustomerOrder_OrderItem" Member="CustomerOrder" ThisKey="OrderId" OtherKey="Id" Type="CustomerOrder" IsForeignKey="true" />
-    </Type>
-  </Table>
   <Table Name="dbo.Invoice" Member="Invoices">
     <Type Name="Invoice">
-      <Column Name="Id" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
-      <Column Name="OrderId" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
-      <Column Name="DueDate" Type="System.DateTime" DbType="Date NOT NULL" CanBeNull="false" />
-      <Association Name="CustomerOrder_Invoice" Member="CustomerOrder" ThisKey="OrderId" OtherKey="Id" Type="CustomerOrder" IsForeignKey="true" />
-    </Type>
-  </Table>
-  <Table Name="dbo.CustomerOrder" Member="CustomerOrders">
-    <Type Name="CustomerOrder">
       <Column Name="Id" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
       <Column Name="Date" Type="System.DateTime" DbType="Date NOT NULL" CanBeNull="false" />
       <Column Name="Subtotal" Type="System.Decimal" DbType="Decimal(18,2) NOT NULL" CanBeNull="false" />
       <Column Name="Total" Type="System.Decimal" DbType="Decimal(18,2) NOT NULL" CanBeNull="false" />
-      <Column Name="VATPercentage" Type="System.Decimal" DbType="Decimal(5,2) NOT NULL" CanBeNull="false" />
+      <Column Name="VAT" Type="System.Decimal" DbType="Decimal(18,2) NOT NULL" CanBeNull="false" />
       <Column Name="ShippingAddressID" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
       <Column Name="CustomerID" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
-      <Association Name="CustomerOrder_OrderItem" Member="OrderItem" ThisKey="Id" OtherKey="OrderId" Type="OrderItem" Cardinality="One" />
-      <Association Name="CustomerOrder_Invoice" Member="Invoices" ThisKey="Id" OtherKey="OrderId" Type="Invoice" />
-      <Association Name="SysUser_CustomerOrder" Member="SysUser" ThisKey="CustomerID" OtherKey="Id" Type="SysUser" IsForeignKey="true" />
-      <Association Name="CustomerDeliveryAddress_CustomerOrder" Member="CustomerDeliveryAddress" ThisKey="ShippingAddressID" OtherKey="Id" Type="CustomerDeliveryAddress" IsForeignKey="true" />
+      <Column Name="DeliveryFee" Type="System.Decimal" DbType="Decimal(10,2) NOT NULL" CanBeNull="false" />
+      <Column Name="Status" Type="System.String" DbType="VarChar(50) NOT NULL" CanBeNull="false" />
+      <Association Name="SysUser_Invoice" Member="SysUser" ThisKey="CustomerID" OtherKey="Id" Type="SysUser" IsForeignKey="true" />
+      <Association Name="CustomerDeliveryAddress_Invoice" Member="CustomerDeliveryAddress" ThisKey="ShippingAddressID" OtherKey="Id" Type="CustomerDeliveryAddress" IsForeignKey="true" />
     </Type>
   </Table>
 </Database>

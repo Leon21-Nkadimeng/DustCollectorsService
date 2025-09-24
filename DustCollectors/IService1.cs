@@ -35,9 +35,9 @@ namespace DustCollectors
         string InsertProductAndSizes(ProductDTO newProduct, List<ProductSizeDTO> productSizes);
         [OperationContract]
         bool AddItemToCart(int userId, int sizeId, int qty);
+       
         [OperationContract]
-        bool placeOrder(List<CartProduct> cartProducts, decimal VAT, decimal subTotal, decimal grandTotal, int userId, int addressId);
-
+        int createInvoice(int userID, int addressID, decimal subtotal, decimal vat, decimal deliveryfee, decimal grandTot);
         /** retrieval methods */
         [OperationContract]
         UserSessionDetails GetUserSessionDetails(string email, string password);
@@ -92,9 +92,11 @@ namespace DustCollectors
         [OperationContract]
         List<DisplayProdCatalog> getProductsByCategory(int categoryId);
         [OperationContract]
-        List<DisplayProdCatalog> getProductsByGender(int categoryId);
+        List<DisplayProdCatalog> getProductsByGender(int genderId);
         [OperationContract]
-        List<DisplayProdCatalog> getProductsByColourway(int categoryId);
+        List<DisplayProdCatalog> getProductsByColourway(int colourwayId);
+        
+       
         /** update methods */
         [OperationContract]
         bool updateBrand(BrandDTO updatedBrand);
@@ -110,7 +112,12 @@ namespace DustCollectors
         string updateProductAndSizes(ProductDTO product, List<ProductSizeDTO> newSizes, List<ProductSizeDTO> editedSizes);
         [OperationContract]
        bool updateUserPersonalDetails(UserPersonalDetails details);
-        
+        [OperationContract]
+        bool updateCartItem(int sizeId, int userId, int qty);
+        [OperationContract]
+        bool activateGenderCategory(int id);
+        [OperationContract]
+        bool updateQTYS(List<CartProduct> cartItems);
         /** Delete methods */
         [OperationContract]
         bool deleteAddress(int addressID);
@@ -129,14 +136,13 @@ namespace DustCollectors
 
         [OperationContract]
         bool deleteCartItems(int userId);
+        [OperationContract]
+        bool removeShoeSize(int sizeId);
 
 
 
 
-
-        /** Utility Methods */
-        int countSizesInStock(int prodId);
-       
+      
     }
 
 
