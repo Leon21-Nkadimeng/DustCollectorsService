@@ -14,5 +14,7 @@ namespace DustCollectors.Classes
         public string name { get; set; }
         [DataMember]
         public string ageGroup { get; set; }
+        [DataMember]
+        public bool isActive { get; set; }
     }
 }

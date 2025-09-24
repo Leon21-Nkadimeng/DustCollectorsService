@@ -14,6 +14,7 @@ namespace DustCollectors
     public class Service1 : IService1
     {
         DustCollectorsDBDataClassesDataContext db = new DustCollectorsDBDataClassesDataContext();
+        DustCollectorsDBDataClassesDataContext dbWrite = new DustCollectorsDBDataClassesDataContext();
         /** Create methods */
         // checks if a user exists, if they exist, retruns false otherwise adds the user to the database and returns true
         bool IService1.IsReg(SysUser newUser)
@@ -121,7 +122,7 @@ namespace DustCollectors
             }
         }
 
-        bool IService1.InsertShoeColourway(ColourwayDTO newColourway)
+        bool IService1.InsertProductColourway(ColourwayDTO newColourway)
         {
             var colourway = (from c in db.Colourways
                             where c.Name.Equals(newColourway.name)
@@ -145,7 +146,7 @@ namespace DustCollectors
             }
         }
 
-        bool IService1.InsertShoeCategory(CategoryDTO newCategory)
+        bool IService1.InsertProductCategory(CategoryDTO newCategory)
         {
             var category = (from c in db.Categories
                          where c.Name.Equals(newCategory.name) && c.IsAvailable.Equals(newCategory.isAvailable)
@@ -170,18 +171,17 @@ namespace DustCollectors
             }
         }
 
-        bool IService1.InsertShoeSize(ShoeSizeDTO newShoeSize)
+        bool IService1.InsertProductSizes(int id, List<ProductSizeDTO> productSizes)
         {
-            var size = (from s in db.ShoeSizes
-                            where s.SizeTag.Equals(newShoeSize.SizeTag) && s.System.Equals(newShoeSize.System)
-                            select s).FirstOrDefault();
-            if (size != null)
-                return false;
-            db.ShoeSizes.InsertOnSubmit(new ShoeSize()
+            foreach(ProductSizeDTO size in productSizes)
             {
-                SizeTag = newShoeSize.SizeTag,
-                System = newShoeSize.System
-            });
+                db.ProductSizes.InsertOnSubmit(new ProductSize() { 
+                                                ProductID = id,
+                                                SizeSystem = size.System,
+                                                SizeTag = size.SizeTag,
+                                                AmountInStock = size.AmountInStock,
+                                                IsAvailable = size.IsAvailable});
+            }
             try
             {
                 db.SubmitChanges();
@@ -194,90 +194,143 @@ namespace DustCollectors
             }
         }
 
-        bool IService1.InsertProduct(ProductDTO newProduct)
+        string IService1.InsertProductAndSizes(ProductDTO newProduct, List<ProductSizeDTO> productSizes)
         {
+           
             var prod = (from p in db.Products
-                        where p.Name.Equals(newProduct.Name) && p.BrandID.Equals(newProduct.BrandID) && p.Description.Equals(newProduct.Description) && newProduct.CategoryID.Equals(p.CategoryID)
+                        where p.Name.Equals(newProduct.Name) && p.BrandID.Equals(newProduct.BrandID) && p.Description.Equals(newProduct.Description) && newProduct.CategoryID.Equals(p.CategoryID) && p.ColourwayID.Equals(newProduct.ColourwayID) && p.GenderID.Equals(newProduct.GenderID) 
                         select p).FirstOrDefault();
             if (prod != null)
-                return false;
-            db.Products.InsertOnSubmit(new Product()
+                return "Product already exists";
+            var prodToInsert = new Product()
             {
-                Name = prod.Name,
-                BrandID = prod.BrandID,
-                Description = prod.Description,
+                Name = newProduct.Name,
+                BrandID = newProduct.BrandID,
+                Description = newProduct.Description,
                 DateAdded = DateTime.Now,
-                CategoryID = prod.CategoryID
-            });
+                Price = newProduct.Price,
+                IsAvailable = newProduct.isActive,
+                CategoryID = newProduct.CategoryID,
+                ColourwayID = newProduct.ColourwayID,
+                GenderID = newProduct.GenderID,
+                MainImgURL = newProduct.MainImgURL
+            };
+            dbWrite.Products.InsertOnSubmit(prodToInsert);
+            List<ProductSize> sizes = new List<ProductSize>();
+            foreach (var s in productSizes)
+            {
+                if (s != null)
+                {
+                    sizes.Add(new ProductSize()
+                    {
+                        SizeTag = s.SizeTag,
+                        SizeSystem = s.System,
+                        IsAvailable = s.IsAvailable,
+                        AmountInStock = s.AmountInStock,
+                        Product = prodToInsert
+                    });
+                }
+
+            }
             try
             {
-                db.SubmitChanges();
-                return true;
+                foreach (ProductSize s in sizes)
+                    dbWrite.ProductSizes.InsertOnSubmit(s);
+                
+                
+                dbWrite.SubmitChanges();
+                return "product inserted successfully";
             }
             catch (Exception e)
             {
                 e.GetBaseException();
-                return false;
+                //Console.WriteLine(e.GetBaseException().Message);
+                return e.GetBaseException().Message;
             }
         }
 
-        bool IService1.InsertShoe(ShoeDTO newShoe)
+        bool IService1.AddItemToCart(int userId, int sizeId, int qty)
         {
-            var shoe = (from s in db.Shoes
-                        where s.ProductID.Equals(newShoe.ProductID) && s.GenderId.Equals(newShoe.GenderID) && s.ColourWayID.Equals(newShoe.ColourwayID)
-                        select s).FirstOrDefault();
-            if (shoe != null)
+            
+            var amountInStock = (from a in db.ProductSizes
+                                 where a.Id.Equals(sizeId)
+                                 select a.AmountInStock).FirstOrDefault();
+            if (qty > amountInStock)
                 return false;
-            db.Shoes.InsertOnSubmit(new Shoe()
+
+            var cartItem = (from c in db.Carts
+                            where c.SizeID.Equals(sizeId) && c.UserID.Equals(userId)
+                            select c).FirstOrDefault();
+
+            if (cartItem == null)
             {
-                ProductID = newShoe.ProductID,
-                DateAdded = DateTime.Now,
-                GenderId = newShoe.GenderID,
-                Price = newShoe.Price,
-                DiscountPercentage = newShoe.DiscountPercentage,
-                ColourWayID = newShoe.ColourwayID,
-                MainImgURL = newShoe.MainImgURL
-            });
+                db.Carts.InsertOnSubmit(new Cart() { SizeID = sizeId, QTY = qty, UserID = userId });
+            } 
+            else
+            {
+                if (cartItem.QTY + qty <= amountInStock)
+                    cartItem.QTY += qty;
+
+            }
             try
             {
                 db.SubmitChanges();
                 return true;
-            }
-            catch (Exception e)
+            }catch(Exception ex)
             {
-                e.GetBaseException();
                 return false;
             }
         }
-        bool IService1.InsertShoeVariant(ShoeVariantDTO newShoeVariant)
+
+        bool IService1.placeOrder(List<CartProduct> cartProducts, decimal VAT, decimal subTotal, decimal grandTotal, int userId, int addressId)
         {
-            var shoe = (from s in db.ShoeVariants
-                        where s.SizeID.Equals(newShoeVariant.SizeID) && s.ShoeId.Equals(newShoeVariant.ShoeId)
-                        select s).FirstOrDefault();
-            if (shoe != null)
-                return false;
-            db.ShoeVariants.InsertOnSubmit(new ShoeVariant()
-            {
-                SizeID = newShoeVariant.SizeID,
-                ShoeId = newShoeVariant.ShoeId,
-                QTYInStock = newShoeVariant.AmountInStock,
-                IsAvailable = newShoeVariant.IsAvailable,
-           
-                DateAdded = DateTime.Now
 
+            var order = new CustomerOrder()
+            {
+                Date = DateTime.Now,
+                Subtotal = subTotal,
+
+                VATPercentage = VAT,
+                Total = grandTotal,
+                ShippingAddressID = addressId,
+                CustomerID = userId
+
+            };
+
+            db.CustomerOrders.InsertOnSubmit(order);
+
+            foreach (CartProduct p in cartProducts)
+            {
+                if (p != null)
+                {
+                    var item = new OrderItem()
+                    {
+                        CustomerOrder = order,
+                        ItemName = p.name,
+                        QTY = p.QTY,
+                        UnitPrice = p.Price,
+                        TotalPrice = p.Price * p.QTY
+                    };
+                    db.OrderItems.InsertOnSubmit(item);
+
+                }
+            }
+
+            db.Invoices.InsertOnSubmit(new Invoice()
+            {
+                CustomerOrder = order,
+                DueDate = DateTime.Now
             });
+
             try
             {
                 db.SubmitChanges();
                 return true;
-            }
-            catch (Exception e)
+            } catch(Exception ex)
             {
-                e.GetBaseException();
                 return false;
             }
         }
-
 
         /** Retrieval methods */
         List<Product> getProds()
@@ -305,26 +358,60 @@ namespace DustCollectors
             return products;
         }
 
+        List<ProdForTblManagement> IService1.getProductsForManagementTbl(int availability)
+        {
+            
+            dynamic prods = null;
+            
 
+            if(availability == 0)
+            {
+                // return inactive ones
+                prods = (from p in db.Products
+                         where p.IsAvailable.Equals(0)
+                         select p).DefaultIfEmpty();
+            } 
+            else if(availability == 1)
+            {
+                // only return active ones
+                prods = (from p in db.Products
+                         where p.IsAvailable.Equals(1)
+                         select p).DefaultIfEmpty();
+            } 
+            else if(availability == 2)
+            {
+                // return all
+                prods = (from p in db.Products
+                         select p).DefaultIfEmpty();
+            }
 
+            if (prods == null)
+                return null;
+            List<ProdForTblManagement> products = new List<ProdForTblManagement>();
+            foreach(Product p in prods)
+            {
+                var sizes = (from s in db.ProductSizes
+                             where s.ProductID.Equals(p.Id)
+                             select s.AmountInStock).Sum();
+                
 
+                products.Add(new ProdForTblManagement() { 
+                    Id = p.Id,
+                    Name = p.Name,
+                    BrandName = p.Brand.Name,
+                    Price = p.Price,
+                    CategoryName = p.Category.Name,
+                    GenderAgeCategory = p.Gender.Name + " (" +p.Gender.AgeGroup+")",
+                    AmountInStock = sizes,
+                    isActive = p.IsAvailable,
+                    DateAdded = p.DateAdded,
+                    MainImgURL = p.MainImgURL
+                });
+            }
 
+            return products;
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        }
 
 
         // retrieves the details required to start a user session
@@ -421,18 +508,31 @@ namespace DustCollectors
                 PostalCode = address.PostalCode
             };
         }
-        List<BrandDTO> IService1.getBrands(bool isActive)
+        List<BrandDTO> IService1.getBrands(int isActive)
         {
-            dynamic brands = (from b in db.Brands
-                              where b.IsActive.Equals(isActive)
-                              select b).DefaultIfEmpty();
+            dynamic brands = null;
+            if (isActive == 0)
+            {
+                brands = (from b in db.Brands
+                                  where b.IsActive.Equals(0)
+                                  select b).DefaultIfEmpty();
+            } else if(isActive == 1)
+            {
+                brands = (from b in db.Brands
+                                  where b.IsActive.Equals(1)
+                                  select b).DefaultIfEmpty();
+            } else
+            {
+                brands = (from b in db.Brands
+                                  select b).DefaultIfEmpty();
+            }
             if (brands == null) return null;
             List<BrandDTO> brandList = new List<BrandDTO>();
             foreach(Brand b in brands)
             {
                 if(b != null)
                 {
-                    brandList.Add(new BrandDTO() {Id=b.Id, name = b.Name, description = b.Description, mailLogoURL = b.MainLogoURL, isActive = b.IsActive });
+                    brandList.Add(new BrandDTO() {Id=b.Id, name = b.Name, description = b.Description, mailLogoURL = b.MainLogoURL, isActive = b.IsActive, dateAdded = b.DateAdded });
                 }
             }
 
@@ -492,17 +592,18 @@ namespace DustCollectors
             return gendersList;
         }
 
-        List<ShoeSizeDTO> IService1.getShoeSizes()
+        List<ProductSizeDTO> IService1.getProductSizes(int ProductID)
         {
-            dynamic shoeSizes = (from s in db.ShoeSizes
+            dynamic shoeSizes = (from s in db.ProductSizes
+                                where s.ProductID == ProductID
                                 select s).DefaultIfEmpty();
             if (shoeSizes == null) return null;
-            List<ShoeSizeDTO> sizesList = new List<ShoeSizeDTO>();
-            foreach (ShoeSize s in shoeSizes)
+            List<ProductSizeDTO> sizesList = new List<ProductSizeDTO>();
+            foreach (ProductSize s in shoeSizes)
             {
                 if (s != null)
                 {
-                    sizesList.Add(new ShoeSizeDTO() { Id = s.Id, SizeTag = s.SizeTag, System = s.System });
+                    sizesList.Add(new ProductSizeDTO() {Id=s.Id, ProductID = s.ProductID, SizeTag = s.SizeTag, System = s.SizeSystem, AmountInStock = s.AmountInStock, IsAvailable = s.IsAvailable });
                 }
             }
 
@@ -537,11 +638,343 @@ namespace DustCollectors
             return sysUsers;
 
         }
+        List<DisplayProdCatalog> IService1.getActiveProducts()
+        {
+            dynamic prods = (from p in db.Products
+                             where p.IsAvailable.Equals(1)
+                             select p).DefaultIfEmpty();
+            if (prods == null)
+                return null;
+            List<DisplayProdCatalog> products = new List<DisplayProdCatalog>();
+            foreach(Product p in prods)
+            {
+                if(p != null)
+                {
+                    products.Add(new DisplayProdCatalog() { 
+                                Id = p.Id,
+                                Name = p.Name,
+                                BrandID = p.BrandID,
+                                BrandName = p.Brand.Name,
+                                Price = p.Price,
+                                colourway = p.Colourway.Name,
+                                gender = p.Gender.Name + " (" + p.Gender.AgeGroup+")",
+                                categoryId = p.CategoryID,
+                                genderId = p.GenderID,
+                                colourwayId = p.ColourwayID,
+                                mainImageURL = p.MainImgURL
+                    });
+                }
+            }
+            return products;
+        }
+        List<DisplayProdCatalog> IService1.getInactiveProducts()
+        {
+            dynamic prods = (from p in db.Products
+                             where p.IsAvailable.Equals(0)
+                             select p).DefaultIfEmpty();
+            if (prods == null)
+                return null;
+            List<DisplayProdCatalog> products = new List<DisplayProdCatalog>();
+            foreach (Product p in prods)
+            {
+                if (p != null)
+                {
+                    products.Add(new DisplayProdCatalog()
+                    {
+                        Id = p.Id,
+                        Name = p.Name,
+                        BrandID = p.BrandID,
+                        BrandName = p.Brand.Name,
+                        Price = p.Price,
+                        colourway = p.Colourway.Name,
+                        gender = p.Gender.Name + " (" + p.Gender.AgeGroup + ")",
+                        categoryId = p.CategoryID,
+                        genderId = p.GenderID,
+                        colourwayId = p.ColourwayID,
+                        mainImageURL = p.MainImgURL
+                    });
+                }
+            }
+            return products;
+        }
+      
+        List<DisplayProdCatalog> IService1.getAllProducts()
+        {
+            dynamic prods = (from p in db.Products
+                      
+                             select p).DefaultIfEmpty();
+            if (prods == null)
+                return null;
+            List<DisplayProdCatalog> products = new List<DisplayProdCatalog>();
+            foreach (Product p in prods)
+            {
+                if (p != null)
+                {
+                    products.Add(new DisplayProdCatalog()
+                    {
+                        Id = p.Id,
+                        Name = p.Name,
+                        BrandID = p.BrandID,
+                        BrandName = p.Brand.Name,
+                        Price = p.Price,
+                        colourway = p.Colourway.Name,
+                        gender = p.Gender.Name + " (" + p.Gender.AgeGroup + ")",
+                        categoryId = p.CategoryID,
+                        genderId = p.GenderID,
+                        colourwayId = p.ColourwayID,
+                        mainImageURL = p.MainImgURL
+                    });
+                }
+            }
+            return products;
+        }
+        ProductDetail IService1.getProductDetails(int prodId)
+        {
+            var prod = (from p in db.Products
+                        where p.Id.Equals(prodId)
+                        select p).FirstOrDefault();
+            if(prod == null)
+                return null;
+            List<ProductSizeDTO> sizesToAdd = new List<ProductSizeDTO>();
+            dynamic prodSizes = (from s in db.ProductSizes
+                             where s.ProductID.Equals(prodId) && s.IsAvailable.Equals(1)
+                             select s).DefaultIfEmpty();
+            if(prodSizes != null)
+            {
+                foreach(ProductSize s in prodSizes)
+                {
+                    if(s != null)
+                    {
+                        sizesToAdd.Add(new ProductSizeDTO()
+                        {
+                            Id = s.Id,
+                            SizeTag = s.SizeTag,
+                            System = s.SizeSystem,
+                            AmountInStock = s.AmountInStock,
+                            ProductID = prod.Id
+                        });
+                    }
+                }
+            }
+            return new ProductDetail { 
+                Id = prod.Id,
+                Name = prod.Name,
+                Price = prod.Price,
+                MainImgURL = prod.MainImgURL,
+                Description = prod.Description,
+                sizes = sizesToAdd
+            };
+        }
 
+        ProductDTO IService1.getProductInfoForEditing(int prodId)
+        {
+            var prod = (from p in db.Products
+                        where p.Id.Equals(prodId)
+                        select p).FirstOrDefault();
+            if (prod == null)
+                return null;
 
+            return new ProductDTO() { 
+                Id = prod.Id,
+                Name = prod.Name,
+                BrandID = prod.BrandID,
+                Description = prod.Description,
+                Price = prod.Price,
+                CategoryID = prod.CategoryID,
+                ColourwayID = prod.ColourwayID,
+                GenderID = prod.GenderID,
+                isActive = prod.IsAvailable,
+                MainImgURL = prod.MainImgURL
+            };
+        }
+        BrandDTO IService1.getBrand(int id)
+        {
+            var brand = (from b in db.Brands
+                         where b.Id.Equals(id)
+                         select b).FirstOrDefault();
+            if(brand == null)
+                return null;
 
+            return new BrandDTO() { 
+                Id = brand.Id,
+            name = brand.Name,
+            mailLogoURL = brand.MainLogoURL,
+            description = brand.Description,
+            isActive = brand.IsActive,
+            dateAdded = brand.DateAdded
+            };
+
+        }
+
+        GenderDTO IService1.getGenderCategory(int id)
+        {
+            var genderCategory = (from g in db.Genders
+                         where g.Id.Equals(id)
+                         select g).FirstOrDefault();
+            if (genderCategory == null)
+                return null;
+
+            return new GenderDTO()
+            {
+                Id = genderCategory.Id,
+                name = genderCategory.Name,
+               ageGroup = genderCategory.AgeGroup
+            };
+
+        }
+
+        ColourwayDTO IService1.getColourway(int id)
+        {
+            var colourway = (from c in db.Colourways
+                                  where c.Id.Equals(id)
+                                  select c).FirstOrDefault();
+            if (colourway == null)
+                return null;
+
+            return new ColourwayDTO()
+            {
+                id = colourway.Id,
+                name = colourway.Name,
+                dateAdded = colourway.DateAdded
+            };
+
+        }
+        CategoryDTO IService1.getCategory(int id)
+        {
+            var category = (from c in db.Categories
+                             where c.Id.Equals(id)
+                             select c).FirstOrDefault();
+            if (category == null)
+                return null;
+
+            return new CategoryDTO()
+            {
+                id = category.Id,
+                name = category.Name,
+                isAvailable = category.IsAvailable,
+                dateAdded =category.DateAdded
+            };
+
+        }
+        List<RegisteredUsers> IService1.getDailyRegisteredUsers()
+        {
+            var result = (from u in db.SysUsers
+                          group u by u.DateRegistered into regUsersGroup
+                          select new { 
+                            DateRegistered = regUsersGroup.Key,
+                            UsersCount = regUsersGroup.Count()
+                          }).DefaultIfEmpty();   
+            if (result == null)
+                return null;
+            List<RegisteredUsers> regusers = new List<RegisteredUsers>();
+            int i = 0;
+            foreach (var group in result)
+            {
+                if (i == 90f)
+                    break;
+                regusers.Add(new RegisteredUsers()
+                {
+                    date = group.DateRegistered,
+                    numUsers = group.UsersCount
+                });
+                i++;
+            }
+            return regusers;
+
+        }
+        List<MonthlyUsers> IService1.getMonthlyRegisteredUsers()
+        {
+            
+            var result = (from u in db.SysUsers
+                          group u by u.DateRegistered.Month into regUsersGroup
+                          select new
+                          {
+                              Month = regUsersGroup.Key.ToString(),
+                              
+                              UsersCount = regUsersGroup.Count()
+                          }).DefaultIfEmpty();
+            if (result == null)
+                return null;
+            List<MonthlyUsers> regusers = new List<MonthlyUsers>();
+            int i = 0;
+            foreach (var group in result)
+            {
+                if (i > 12)
+                    break;
+                regusers.Add(new MonthlyUsers()
+                {
+                    Month = group.Month.ToString(),
+                    numUsers = group.UsersCount
+                });
+                i++;
+            }
+            return regusers;
+        }
+        List<AnnualUserRegistrations> IService1.getAnnualUserRegistrations()
+        {
+            var result = (from u in db.SysUsers
+                          group u by u.DateRegistered.Year into regUsersGroup
+                          select new
+                          {
+                              Year = regUsersGroup.Key.ToString(),
+
+                              UsersCount = regUsersGroup.Count()
+                          }).DefaultIfEmpty();
+            if (result == null)
+                return null;
+            List<AnnualUserRegistrations> regusers = new List<AnnualUserRegistrations>();
+           
+            foreach (var group in result)
+            {
+               
+                regusers.Add(new AnnualUserRegistrations()
+                {
+                    year = group.Year.ToString(),
+                    numUsers = group.UsersCount
+                });
+            }
+            return regusers;
+        }
+        List<DisplayProdCatalog> getProductsByCategory(int categoryId)
+        {
+            dynamic prods = (from p in db.Products
+                             where p.CategoryID.Equals(categoryId)&&p.IsAvailable.Equals(1)
+                             select p).DefaultIfEmpty();
+
+            if(prods == null)
+            {
+                return null;
+            }
+            List<DisplayProdCatalog> products = new List<DisplayProdCatalog>();
+
+            foreach(Product p in prods)
+            {
+                if(p != null)
+                {
+                    products.Add(new DisplayProdCatalog() { 
+                         Id = p.Id,
+                         Name = p.Name,
+                         BrandName = p.Brand.Name,
+                         //colourway = 
+                    });
+                }
+            }
+
+            return products;
+        }
+      
+        List<DisplayProdCatalog> getProductsByGender(int categoryId)
+        {
+            return null;
+        }
+       
+        List<DisplayProdCatalog> getProductsByColourway(int categoryId)
+        {
+            return null;
+        }
 
         /** Update methods */
+
         bool IService1.updateUserPassword(int userID, string newPassword)
         {
             var user = (from u in db.SysUsers
@@ -561,7 +994,245 @@ namespace DustCollectors
                 return false;
             }
         }
+        string IService1.updateProductAndSizes(ProductDTO product, List<ProductSizeDTO> newSizes, List<ProductSizeDTO> editedSizes)
+        {
+            var prodToEdit = (from p in db.Products
+                              where p.Id.Equals(product.Id)
+                              select p).FirstOrDefault();
+            if (prodToEdit == null)
+                return "Product does not exist";
+          
+            // edit the product
+            if (!prodToEdit.Name.Equals(product.Name))
+                prodToEdit.Name = product.Name;
+            if (!prodToEdit.MainImgURL.Equals(product.MainImgURL))
+                prodToEdit.MainImgURL = product.MainImgURL;
+            if (!prodToEdit.IsAvailable.Equals(product.isActive))
+                prodToEdit.IsAvailable = product.isActive;
+            if (!prodToEdit.Price.Equals(product.Price))
+                prodToEdit.Price = product.Price;
+            if (!prodToEdit.ColourwayID.Equals(product.ColourwayID))
+                prodToEdit.ColourwayID = product.ColourwayID;
+            if (!prodToEdit.GenderID.Equals(product.GenderID))
+                prodToEdit.CategoryID = (product.CategoryID);
+            if (!product.isActive.Equals(prodToEdit.IsAvailable))
+                prodToEdit.IsAvailable = product.isActive;
 
+
+            // insert new sizes
+            foreach (ProductSizeDTO size in newSizes)
+            {
+                if (size == null)
+                    continue;
+                var x = (from s in db.ProductSizes
+                         where s.SizeSystem.Equals(size.System) && s.SizeTag.Equals(size.SizeTag) && s.ProductID.Equals(product.Id)
+                         select s).FirstOrDefault();
+                if (x != null)
+                    continue;
+                db.ProductSizes.InsertOnSubmit(new ProductSize
+                {
+                    ProductID = prodToEdit.Id,
+                    SizeSystem = size.System,
+                    SizeTag = size.SizeTag,
+                    AmountInStock = size.AmountInStock,
+                    IsAvailable = size.IsAvailable
+                });
+            }
+
+            // edit sizes
+            foreach(ProductSizeDTO size in editedSizes)
+            {
+                if(size != null)
+                {
+                    var prodSize = (from s in db.ProductSizes
+                                    where s.Id.Equals(size.Id)
+                                    select s).FirstOrDefault();
+
+                    if(prodSize != null)
+                    {
+                        if (!prodSize.IsAvailable.Equals(size.IsAvailable))
+                            prodSize.IsAvailable = size.IsAvailable;
+                        if (!prodSize.AmountInStock.Equals(size.AmountInStock))
+                            prodSize.AmountInStock = size.AmountInStock;
+                        if (!prodSize.SizeTag.Equals(size.SizeTag))
+                            prodSize.SizeTag = size.SizeTag;
+                        if (!prodSize.SizeSystem.Equals(size.System))
+                            prodSize.SizeSystem = size.System;
+                    }
+                }
+            }
+           
+            try
+            {
+                db.SubmitChanges();
+                return "Products and sizes edited successfully";
+            } catch(Exception e)
+            {
+                e.GetBaseException();
+                return e.GetBaseException().Message;
+            }
+        }
+
+     
+        bool IService1.updateBrand(BrandDTO updatedBrand)
+        {
+            var brand = (from b in db.Brands
+                         where b.Id.Equals(updatedBrand.Id)
+                         select b).FirstOrDefault();
+            if (brand == null)
+                return false;
+
+            //if (!brand.Name.Equals(updatedBrand.name))
+                brand.Name = updatedBrand.name;
+            //if (!brand.Description.Equals(updatedBrand.description))
+                brand.Description = updatedBrand.description;
+            //if (!brand.MainLogoURL.Equals(updatedBrand.mailLogoURL))
+                brand.MainLogoURL = updatedBrand.mailLogoURL;
+            //if (!brand.IsActive.Equals(updatedBrand.isActive))
+                brand.IsActive = updatedBrand.isActive;
+            if (!brand.IsActive)
+            {
+                dynamic prods = (from p in db.Products
+                                 where p.BrandID.Equals(brand.Id)
+                                 select p).DefaultIfEmpty();
+                if (prods != null)
+                {
+                    foreach (Product p in prods)
+                    {
+                        if (p != null)
+                            p.IsAvailable = false;
+                    }
+                }
+            }
+            try
+            {
+                db.SubmitChanges();
+                return true;
+            } catch(Exception ex)
+            {
+                return false;
+            }
+
+        }
+      
+        bool IService1.updateCategory(CategoryDTO updatedCategory)
+        {
+            var category = (from c in db.Categories
+                         where c.Id.Equals(updatedCategory.id)
+                         select c).FirstOrDefault();
+            if (category == null)
+                return true;
+
+           // if (!category.Name.Equals(updatedCategory.name))
+                category.Name = updatedCategory.name;
+           
+            try
+            {
+                db.SubmitChanges();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+        }
+      
+        bool IService1.updateColourway(ColourwayDTO updatedColourway)
+        {
+            var colorway = (from c in db.Colourways
+                         where c.Id.Equals(updatedColourway.id)
+                         select c).FirstOrDefault();
+            if (colorway == null)
+                return true;
+          //  if (!colorway.Name.Equals(updatedColourway.name))
+                colorway.Name = updatedColourway.name;
+
+            try
+            {
+                db.SubmitChanges();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+
+        }
+
+        bool IService1.updateGenderCategory(GenderDTO updatedGenderCategory)
+        {
+            var genderCategory = (from g in db.Genders
+                         where g.Id.Equals(updatedGenderCategory.Id)
+                         select g).FirstOrDefault();
+            if (genderCategory == null)
+                return true;
+          //  if (!genderCategory.Name.Equals(updatedGenderCategory.name))
+                genderCategory.Name = updatedGenderCategory.name;
+           // if (!genderCategory.AgeGroup.Equals(updatedGenderCategory.ageGroup))
+                genderCategory.AgeGroup = updatedGenderCategory.ageGroup;
+            try
+            {
+                db.SubmitChanges();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+
+        }
+
+        List<CartProduct> IService1.getCartProducts(int userId)
+        {
+            dynamic cartProds = (from c in db.Carts
+                                 where c.UserID.Equals(userId)
+                                 select c).DefaultIfEmpty();
+            if (cartProds == null)
+                return null;
+            List<CartProduct> cartProducts = new List<CartProduct>();
+            foreach(Cart c in cartProds)
+            {
+                if(c != null)
+                {
+                    cartProducts.Add(new CartProduct
+                    {
+                        SizeID = c.SizeID,
+                        QTY = c.QTY,
+                        UserID = c.UserID,
+                        name = c.ProductSize.Product.Name,
+                        size = c.ProductSize.SizeTag + " (" + c.ProductSize.SizeSystem + ")",
+                        Price = c.ProductSize.Product.Price,
+                        imageURL = c.ProductSize.Product.MainImgURL,
+                        amountInStock = c.ProductSize.AmountInStock
+                    });
+                }
+            }
+            return cartProducts;
+
+        }
+        bool IService1.updateUserPersonalDetails(UserPersonalDetails details)
+        {
+            var user = (from u in db.SysUsers
+                        where u.Id.Equals(details.ID)
+                        select u).FirstOrDefault();
+
+            if (user == null)
+                return false;
+
+            try
+            {
+                user.FirstName = details.FirstName;
+                user.LastName = details.LastName;
+                user.PhoneNumber = details.PhoneNumber;
+                user.EmailAddress = details.EmailAddress;
+                db.SubmitChanges();
+                return true;
+            }
+            catch(Exception ex)
+            {
+                return false;
+            }
+        }
         /** Delete methods */
         bool IService1.deleteAddress(int addressID)
         {
@@ -586,7 +1257,228 @@ namespace DustCollectors
             }
         }
 
-        
+      
+        bool IService1.deleteProductSizes(List<int> ids)
+        {
+            List<ProductSize> sizesToDelete = new List<ProductSize>();
+            foreach(int i in ids)
+            {
+                var prodSize = (from s in db.ProductSizes
+                                where s.Id.Equals(i)
+                                select s).FirstOrDefault();
+                if (prodSize != null)
+                {
+                    prodSize.IsAvailable = false;
+                }
+            }
+            try
+            {
+                db.SubmitChanges();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                ex.GetBaseException();
+                return false;
+            }
+        }
+      
+        bool IService1.deleteBrand(int id)
+        {
+            var brand = (from b in db.Brands
+                                  where b.Id.Equals(id)
+                                  select b).FirstOrDefault();
+            if (brand == null)
+                return true;
+            brand.IsActive = false;
+            dynamic prods = (from p in db.Products
+                             where p.BrandID.Equals(brand.Id)
+                             select p).DefaultIfEmpty();
+            if(prods != null)
+            {
+                foreach(Product p in prods)
+                {
+                    if(p != null)
+                        p.IsAvailable = false;
+                }
+            }
+            try
+            {
+                db.SubmitChanges();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                ex.GetBaseException();
+                return false;
+            }
+        }
+     
+        bool IService1.deleteCategory(int id)
+        {
+            var category = (from c in db.Categories
+                         where c.Id.Equals(id)
+                         select c).FirstOrDefault();
+            if (category == null)
+                return true;
+            category.IsAvailable = false;
+            dynamic prods = (from p in db.Products
+                             where p.BrandID.Equals(category.Id)
+                             select p).DefaultIfEmpty();
+            if (prods != null)
+            {
+                foreach (Product p in prods)
+                {
+                    if(p != null)
+                        p.IsAvailable = false;
+                }
+            }
+            try
+            {
+                db.SubmitChanges();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                ex.GetBaseException();
+                return false;
+            }
+        }
+       
+        bool IService1.deleteColourway(int id)
+        {
+            var colourway = (from c in db.Colourways
+                            where c.Id.Equals(id)
+                            select c).FirstOrDefault();
+            if (colourway == null)
+                return true;
+            colourway.IsAvailable = false;
+            dynamic prods = (from p in db.Products
+                             where p.BrandID.Equals(colourway.Id)
+                             select p).DefaultIfEmpty();
+            if (prods != null)
+            {
+                foreach (Product p in prods)
+                {
+                    if (p != null)
+                        p.IsAvailable = false;
+                }
+            }
+            try
+            {
+                db.SubmitChanges();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                ex.GetBaseException();
+                return false;
+            }
+        }
+
+        bool IService1.deteGenderCategory(int id)
+        {
+            var genderCategory = (from c in db.Colourways
+                             where c.Id.Equals(id)
+                             select c).FirstOrDefault();
+            if (genderCategory == null)
+                return true;
+            genderCategory.IsAvailable = false;
+            dynamic prods = (from p in db.Products
+                             where p.BrandID.Equals(genderCategory.Id)
+                             select p).DefaultIfEmpty();
+            if (prods != null)
+            {
+                foreach (Product p in prods)
+                {
+                    if (p != null)
+                        p.IsAvailable = false;
+                }
+            }
+            try
+            {
+                db.SubmitChanges();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                ex.GetBaseException();
+                return false;
+            }
+        }
+
+        bool IService1.deleteCartItems(int userId)
+        {
+            dynamic cartItems = (from c in db.Carts
+                                 where c.UserID.Equals(userId)
+                                 select c).DefaultIfEmpty();
+            if (cartItems == null)
+                return false;
+
+            foreach(CartProduct c in cartItems)
+            {
+                if(c != null)
+                {
+                    var cp = (from cpDelete in db.Carts
+                              where cpDelete.SizeID.Equals(c.SizeID)
+                              select cpDelete).FirstOrDefault();
+                    if(cp != null)
+                        db.Carts.DeleteOnSubmit(cp);
+                }
+            }
+
+            try
+            {
+                db.SubmitChanges();
+                return true;
+            }catch(Exception e)
+            {
+                return false;
+            }
+        }
+        bool IService1.removeItemFromCart(int userID, int sizeID)
+        {
+            var prod = (from p in db.Carts
+                        where p.SizeID.Equals(sizeID) && p.UserID.Equals(userID)
+                        select p).FirstOrDefault();
+
+            if(prod == null)
+                return false;
+
+            db.Carts.DeleteOnSubmit(prod);
+            try
+            {
+                db.SubmitChanges();
+                return true;
+            }catch(Exception ex)
+            {
+                return false;
+            }
+        }
+        int IService1.countSizesInStock(int prodId)
+        {
+            var sizes = (from s in db.ProductSizes
+                             where s.ProductID.Equals(prodId)
+                             select s).Count();
+            return sizes;
+
+           
+        }
+
+        List<DisplayProdCatalog> IService1.getProductsByCategory(int categoryId)
+        {
+            throw new NotImplementedException();
+        }
+
+        List<DisplayProdCatalog> IService1.getProductsByGender(int categoryId)
+        {
+            throw new NotImplementedException();
+        }
+
+        List<DisplayProdCatalog> IService1.getProductsByColourway(int categoryId)
+        {
+            throw new NotImplementedException();
+        }
     }
 
 }

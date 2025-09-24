@@ -15,6 +15,10 @@ namespace DustCollectors.Classes
       
         [DataMember]
         public bool isAvailable { get; set; }
+        [DataMember]
+        public DateTime dateAdded { get; set; }
+        [DataMember]
+        public bool isActive { get; set; }
 
     }
 }

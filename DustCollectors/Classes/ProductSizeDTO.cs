@@ -5,22 +5,21 @@ using System.Web;
 using System.Runtime.Serialization;
 namespace DustCollectors.Classes
 {
+    [Serializable]
     [DataContract]
-    public class ShoeDTO
+    public class ProductSizeDTO
     {
         [DataMember]
         public int Id { get; set; }
         [DataMember]
         public int ProductID { get; set; }
         [DataMember]
-        public int GenderID { get; set; }
+        public int AmountInStock { get; set; }
         [DataMember]
-        public decimal Price { get; set; }
+        public bool IsAvailable { get; set; }
         [DataMember]
-        public decimal DiscountPercentage { get; set; }
+        public string SizeTag { get; set; }
         [DataMember]
-        public int ColourwayID { get; set; }
-        [DataMember]
-        public string MainImgURL { get; set; }
+        public string System { get; set; }
     }
 }

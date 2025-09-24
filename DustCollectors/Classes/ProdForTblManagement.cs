@@ -6,30 +6,27 @@ using System.Runtime.Serialization;
 namespace DustCollectors.Classes
 {
     [DataContract]
-    public class ProductDTO
+    public class ProdForTblManagement
     {
         [DataMember]
         public int Id { get; set; }
         [DataMember]
         public string Name { get; set; }
-       
         [DataMember]
-        public int BrandID { get; set; }
-        [DataMember]
-        public string Description { get; set; }
+        public string BrandName { get; set; }
         [DataMember]
         public decimal Price { get; set; }
         [DataMember]
-        public int CategoryID { get; set; }
+        public string CategoryName { get; set; }
         [DataMember]
-        public int ColourwayID { get; set; }
+        public string GenderAgeCategory { get; set; }
         [DataMember]
-        public int GenderID { get; set; }
+        public int AmountInStock { get; set; }
         [DataMember]
         public bool isActive { get; set; }
         [DataMember]
+        public string MainImgURL { get; set; }
+        [DataMember]
         public DateTime DateAdded { get; set; }
-       [DataMember]
-       public string MainImgURL { get; set; }
     }
 }

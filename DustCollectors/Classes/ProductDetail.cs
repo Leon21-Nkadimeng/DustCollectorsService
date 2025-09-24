@@ -6,19 +6,21 @@ using System.Runtime.Serialization;
 namespace DustCollectors.Classes
 {
     [DataContract]
-    public class ShoeVariantDTO
+    public class ProductDetail
     {
         [DataMember]
         public int Id { get; set; }
         [DataMember]
-        public int SizeID { get; set; }
+        public string Name { get; set; }
         [DataMember]
-        public int ShoeId { get; set; }
+        public decimal Price { get; set; }
+        
         [DataMember]
-        public int AmountInStock { get; set; }
+        public string MainImgURL { get; set; }
         [DataMember]
-        public bool IsAvailable { get; set; }
+        public string Description { get; set; }
         [DataMember]
-        public DateTime DateActivated { get; set; }
+        public List<ProductSizeDTO> sizes { get; set; }
+
     }
 }

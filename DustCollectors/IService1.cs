@@ -15,26 +15,28 @@ namespace DustCollectors
     public interface IService1
     {
         /** create methods */
+        // user
         [OperationContract]
         bool IsReg(SysUser user);
         [OperationContract]
         bool InsertAddress(CustomerAddress address);
+        // product
         [OperationContract]
-        bool InsertShoeColourway(ColourwayDTO newColourway);
+        bool InsertProductColourway(ColourwayDTO newColourway);
         [OperationContract]
-        bool InsertShoeCategory(CategoryDTO newCategory);
-        [OperationContract]
-        bool InsertShoeSize(ShoeSizeDTO newShoeSize);
-        [OperationContract]
-        bool InsertProduct(ProductDTO newProduct);
+        bool InsertProductCategory(CategoryDTO newCategory);
         [OperationContract]
         bool InsertBrand(BrandDTO newBrand);
         [OperationContract]
         bool InsertGender(GenderDTO newGender);
         [OperationContract]
-        bool InsertShoe(ShoeDTO newShoe);
+        bool InsertProductSizes(int id, List<ProductSizeDTO> productSizes);
         [OperationContract]
-        bool InsertShoeVariant(ShoeVariantDTO newShoeVariant);
+        string InsertProductAndSizes(ProductDTO newProduct, List<ProductSizeDTO> productSizes);
+        [OperationContract]
+        bool AddItemToCart(int userId, int sizeId, int qty);
+        [OperationContract]
+        bool placeOrder(List<CartProduct> cartProducts, decimal VAT, decimal subTotal, decimal grandTotal, int userId, int addressId);
 
         /** retrieval methods */
         [OperationContract]
@@ -48,7 +50,7 @@ namespace DustCollectors
         [OperationContract]
         CustomerAddress getCustomerAddress(int customerID);
         [OperationContract]
-        List<BrandDTO> getBrands(bool isActive);
+        List<BrandDTO> getBrands(int isActive);
         [OperationContract]
         List<CategoryDTO> getCategories(bool isAvailable);
         [OperationContract]
@@ -56,18 +58,84 @@ namespace DustCollectors
         [OperationContract]
         List<GenderDTO> getGenders();
         [OperationContract]
-        List<ShoeSizeDTO> getShoeSizes();
+        List<ProductSizeDTO> getProductSizes(int ProductID);
         [OperationContract]
         List<SysUserDTO> getUsers(bool isActive);
-
-
+        [OperationContract]
+        List<DisplayProdCatalog> getActiveProducts();
+        [OperationContract]
+        List<DisplayProdCatalog> getInactiveProducts();
+        [OperationContract]
+        List<DisplayProdCatalog> getAllProducts();
+        [OperationContract]
+        List<ProdForTblManagement> getProductsForManagementTbl(int availability);
+        [OperationContract]
+        ProductDetail getProductDetails(int prodId);
+        [OperationContract]
+        ProductDTO getProductInfoForEditing(int prodId);
+        [OperationContract]
+        BrandDTO getBrand(int id);
+        [OperationContract]
+        GenderDTO getGenderCategory(int id);
+        [OperationContract]
+        ColourwayDTO getColourway(int id);
+        [OperationContract]
+        CategoryDTO getCategory(int id);
+        [OperationContract]
+        List<RegisteredUsers> getDailyRegisteredUsers();
+        [OperationContract]
+        List<MonthlyUsers> getMonthlyRegisteredUsers();
+        [OperationContract]
+        List<AnnualUserRegistrations> getAnnualUserRegistrations();
+        [OperationContract]
+        List<CartProduct> getCartProducts(int userId);
+        [OperationContract]
+        List<DisplayProdCatalog> getProductsByCategory(int categoryId);
+        [OperationContract]
+        List<DisplayProdCatalog> getProductsByGender(int categoryId);
+        [OperationContract]
+        List<DisplayProdCatalog> getProductsByColourway(int categoryId);
         /** update methods */
         [OperationContract]
+        bool updateBrand(BrandDTO updatedBrand);
+        [OperationContract]
+        bool updateCategory(CategoryDTO updatedCategory);
+        [OperationContract]
+        bool updateColourway(ColourwayDTO updatedColourway);
+        [OperationContract]
+        bool updateGenderCategory(GenderDTO updatedGenderCategory);
+        [OperationContract]
         bool updateUserPassword(int userID, string newPassword);
-
+        [OperationContract]
+        string updateProductAndSizes(ProductDTO product, List<ProductSizeDTO> newSizes, List<ProductSizeDTO> editedSizes);
+        [OperationContract]
+       bool updateUserPersonalDetails(UserPersonalDetails details);
+        
         /** Delete methods */
         [OperationContract]
         bool deleteAddress(int addressID);
+        [OperationContract]
+        bool deleteProductSizes(List<int> ids);
+        [OperationContract]
+        bool deleteBrand(int id);
+        [OperationContract]
+        bool deleteCategory(int id);
+        [OperationContract]
+        bool deleteColourway(int id);
+        [OperationContract]
+        bool deteGenderCategory(int id);
+        [OperationContract]
+        bool removeItemFromCart(int userID, int sizeID);
+
+        [OperationContract]
+        bool deleteCartItems(int userId);
+
+
+
+
+
+        /** Utility Methods */
+        int countSizesInStock(int prodId);
        
     }
 

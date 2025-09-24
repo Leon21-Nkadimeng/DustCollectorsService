@@ -17,6 +17,8 @@ namespace DustCollectors.Classes
         [DataMember]
         public string mailLogoURL { get; set; }
         [DataMember]
+        public DateTime dateAdded { get; set; }
+        [DataMember]
         public bool isActive { get; set; }
     }
 }

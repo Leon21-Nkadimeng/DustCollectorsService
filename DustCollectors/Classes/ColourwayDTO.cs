@@ -12,6 +12,9 @@ namespace DustCollectors
         public int id { get; set; }
         [DataMember]
         public string name { get; set; }
-        
+        [DataMember]
+        public DateTime dateAdded { get; set; }
+        [DataMember]
+        public bool isActive { get; set; }
     }
 }

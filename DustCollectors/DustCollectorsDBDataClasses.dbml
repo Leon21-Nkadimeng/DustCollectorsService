@@ -24,8 +24,9 @@
     <Type Name="Colourway">
       <Column Name="Id" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
       <Column Name="Name" Type="System.String" DbType="VarChar(255) NOT NULL" CanBeNull="false" />
+      <Column Name="IsAvailable" Type="System.Boolean" DbType="Bit NOT NULL" CanBeNull="false" />
       <Column Name="DateAdded" Type="System.DateTime" DbType="Date NOT NULL" CanBeNull="false" />
-      <Association Name="Colourway_Shoe" Member="Shoes" ThisKey="Id" OtherKey="ColourWayID" Type="Shoe" />
+      <Association Name="Colourway_Product" Member="Products" ThisKey="Id" OtherKey="ColourwayID" Type="Product" />
     </Type>
   </Table>
   <Table Name="dbo.CustomerDeliveryAddress" Member="CustomerDeliveryAddresses">
@@ -41,6 +42,7 @@
       <Column Name="PostalCode" Type="System.String" DbType="VarChar(10) NOT NULL" CanBeNull="false" />
       <Column Name="CustomerID" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
       <Column Name="IsActive" Type="System.Boolean" DbType="Bit NOT NULL" CanBeNull="false" />
+      <Association Name="CustomerDeliveryAddress_CustomerOrder" Member="CustomerOrders" ThisKey="Id" OtherKey="ShippingAddressID" Type="CustomerOrder" />
       <Association Name="SysUser_CustomerDeliveryAddress" Member="SysUser" ThisKey="CustomerID" OtherKey="Id" Type="SysUser" IsForeignKey="true" />
     </Type>
   </Table>
@@ -56,65 +58,41 @@
     <Type Name="Gender">
       <Column Name="Id" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
       <Column Name="Name" Type="System.String" DbType="VarChar(30) NOT NULL" CanBeNull="false" />
+      <Column Name="IsAvailable" Type="System.Boolean" DbType="Bit NOT NULL" CanBeNull="false" />
       <Column Name="AgeGroup" Type="System.String" DbType="VarChar(50) NOT NULL" CanBeNull="false" />
-      <Association Name="Gender_Shoe" Member="Shoes" ThisKey="Id" OtherKey="GenderId" Type="Shoe" />
-    </Type>
-  </Table>
-  <Table Name="dbo.Logins" Member="Logins">
-    <Type Name="Login">
-      <Column Name="Id" Type="System.Int32" DbType="Int NOT NULL" IsPrimaryKey="true" CanBeNull="false" />
-      <Column Name="UserID" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
-      <Column Name="Date" Type="System.DateTime" DbType="Date NOT NULL" CanBeNull="false" />
-      <Column Name="Time" Type="System.TimeSpan" DbType="Time NOT NULL" CanBeNull="false" />
+      <Association Name="Gender_Product" Member="Products" ThisKey="Id" OtherKey="GenderID" Type="Product" />
     </Type>
   </Table>
   <Table Name="dbo.Product" Member="Products">
     <Type Name="Product">
       <Column Name="Id" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
-      <Column Name="Name" Type="System.String" DbType="VarChar(70) NOT NULL" CanBeNull="false" />
+      <Column Name="Name" Type="System.String" DbType="VarChar(200) NOT NULL" CanBeNull="false" />
       <Column Name="BrandID" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
       <Column Name="Description" Type="System.String" DbType="VarChar(MAX) NOT NULL" CanBeNull="false" />
+      <Column Name="Price" Type="System.Decimal" DbType="Decimal(10,2) NOT NULL" CanBeNull="false" />
+      <Column Name="ColourwayID" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Column Name="GenderID" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
       <Column Name="DateAdded" Type="System.DateTime" DbType="Date NOT NULL" CanBeNull="false" />
       <Column Name="CategoryID" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
-      <Association Name="Product_Shoe" Member="Shoes" ThisKey="Id" OtherKey="ProductID" Type="Shoe" />
+      <Column Name="IsAvailable" Type="System.Boolean" DbType="Bit NOT NULL" CanBeNull="false" />
+      <Column Name="MainImgURL" Type="System.String" DbType="VarChar(MAX) NOT NULL" CanBeNull="false" />
+      <Association Name="Product_ProductSize" Member="ProductSizes" ThisKey="Id" OtherKey="ProductID" Type="ProductSize" />
       <Association Name="Brand_Product" Member="Brand" ThisKey="BrandID" OtherKey="Id" Type="Brand" IsForeignKey="true" />
       <Association Name="Category_Product" Member="Category" ThisKey="CategoryID" OtherKey="Id" Type="Category" IsForeignKey="true" />
+      <Association Name="Colourway_Product" Member="Colourway" ThisKey="ColourwayID" OtherKey="Id" Type="Colourway" IsForeignKey="true" />
+      <Association Name="Gender_Product" Member="Gender" ThisKey="GenderID" OtherKey="Id" Type="Gender" IsForeignKey="true" />
     </Type>
   </Table>
-  <Table Name="dbo.Shoe" Member="Shoes">
-    <Type Name="Shoe">
+  <Table Name="dbo.ProductSize" Member="ProductSizes">
+    <Type Name="ProductSize">
       <Column Name="Id" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
       <Column Name="ProductID" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
-      <Column Name="DateAdded" Type="System.DateTime" DbType="Date NOT NULL" CanBeNull="false" />
-      <Column Name="GenderId" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
-      <Column Name="Price" Type="System.Decimal" DbType="Decimal(9,3) NOT NULL" CanBeNull="false" />
-      <Column Name="DiscountPercentage" Type="System.Decimal" DbType="Decimal(6,3) NOT NULL" CanBeNull="false" />
-      <Column Name="ColourWayID" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
-      <Column Name="MainImgURL" Type="System.String" DbType="VarChar(MAX) NOT NULL" CanBeNull="false" />
-      <Association Name="Shoe_ShoeVariant" Member="ShoeVariants" ThisKey="Id" OtherKey="ShoeId" Type="ShoeVariant" />
-      <Association Name="Colourway_Shoe" Member="Colourway" ThisKey="ColourWayID" OtherKey="Id" Type="Colourway" IsForeignKey="true" />
-      <Association Name="Gender_Shoe" Member="Gender" ThisKey="GenderId" OtherKey="Id" Type="Gender" IsForeignKey="true" />
-      <Association Name="Product_Shoe" Member="Product" ThisKey="ProductID" OtherKey="Id" Type="Product" IsForeignKey="true" />
-    </Type>
-  </Table>
-  <Table Name="dbo.ShoeSize" Member="ShoeSizes">
-    <Type Name="ShoeSize">
-      <Column Name="Id" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
-      <Column Name="SizeTag" Type="System.String" DbType="VarChar(10) NOT NULL" CanBeNull="false" />
-      <Column Name="System" Type="System.String" DbType="VarChar(10) NOT NULL" CanBeNull="false" />
-      <Association Name="ShoeSize_ShoeVariant" Member="ShoeVariants" ThisKey="Id" OtherKey="SizeID" Type="ShoeVariant" />
-    </Type>
-  </Table>
-  <Table Name="dbo.ShoeVariant" Member="ShoeVariants">
-    <Type Name="ShoeVariant">
-      <Column Name="Id" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
-      <Column Name="SizeID" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
-      <Column Name="ShoeId" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
-      <Column Name="QTYInStock" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Column Name="AmountInStock" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
       <Column Name="IsAvailable" Type="System.Boolean" DbType="Bit NOT NULL" CanBeNull="false" />
-      <Column Name="DateAdded" Type="System.DateTime" DbType="Date NOT NULL" CanBeNull="false" />
-      <Association Name="Shoe_ShoeVariant" Member="Shoe" ThisKey="ShoeId" OtherKey="Id" Type="Shoe" IsForeignKey="true" />
-      <Association Name="ShoeSize_ShoeVariant" Member="ShoeSize" ThisKey="SizeID" OtherKey="Id" Type="ShoeSize" IsForeignKey="true" />
+      <Column Name="SizeTag" Type="System.String" DbType="VarChar(50) NOT NULL" CanBeNull="false" />
+      <Column Name="SizeSystem" Type="System.String" DbType="VarChar(50) NOT NULL" CanBeNull="false" />
+      <Association Name="ProductSize_Cart" Member="Carts" ThisKey="Id" OtherKey="SizeID" Type="Cart" />
+      <Association Name="Product_ProductSize" Member="Product" ThisKey="ProductID" OtherKey="Id" Type="Product" IsForeignKey="true" />
     </Type>
   </Table>
   <Table Name="dbo.SysUser" Member="SysUsers">
@@ -129,6 +107,50 @@
       <Column Name="DateRegistered" Type="System.DateTime" DbType="Date NOT NULL" CanBeNull="false" />
       <Column Name="IsActive" Type="System.Boolean" DbType="Bit NOT NULL" CanBeNull="false" />
       <Association Name="SysUser_CustomerDeliveryAddress" Member="CustomerDeliveryAddresses" ThisKey="Id" OtherKey="CustomerID" Type="CustomerDeliveryAddress" />
+      <Association Name="SysUser_Cart" Member="Carts" ThisKey="Id" OtherKey="UserID" Type="Cart" />
+      <Association Name="SysUser_CustomerOrder" Member="CustomerOrders" ThisKey="Id" OtherKey="CustomerID" Type="CustomerOrder" />
+    </Type>
+  </Table>
+  <Table Name="dbo.Cart" Member="Carts">
+    <Type Name="Cart">
+      <Column Name="SizeID" Type="System.Int32" DbType="Int NOT NULL" IsPrimaryKey="true" CanBeNull="false" />
+      <Column Name="UserID" Type="System.Int32" DbType="Int NOT NULL" IsPrimaryKey="true" CanBeNull="false" />
+      <Column Name="QTY" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Association Name="ProductSize_Cart" Member="ProductSize" ThisKey="SizeID" OtherKey="Id" Type="ProductSize" IsForeignKey="true" />
+      <Association Name="SysUser_Cart" Member="SysUser" ThisKey="UserID" OtherKey="Id" Type="SysUser" IsForeignKey="true" />
+    </Type>
+  </Table>
+  <Table Name="dbo.OrderItem" Member="OrderItems">
+    <Type Name="OrderItem">
+      <Column Name="OrderId" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
+      <Column Name="ItemName" Type="System.String" DbType="VarChar(100) NOT NULL" CanBeNull="false" />
+      <Column Name="QTY" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Column Name="UnitPrice" Type="System.Decimal" DbType="Decimal(18,2) NOT NULL" CanBeNull="false" />
+      <Column Name="TotalPrice" Type="System.Decimal" DbType="Decimal(18,2) NOT NULL" CanBeNull="false" />
+      <Association Name="CustomerOrder_OrderItem" Member="CustomerOrder" ThisKey="OrderId" OtherKey="Id" Type="CustomerOrder" IsForeignKey="true" />
+    </Type>
+  </Table>
+  <Table Name="dbo.Invoice" Member="Invoices">
+    <Type Name="Invoice">
+      <Column Name="Id" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
+      <Column Name="OrderId" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Column Name="DueDate" Type="System.DateTime" DbType="Date NOT NULL" CanBeNull="false" />
+      <Association Name="CustomerOrder_Invoice" Member="CustomerOrder" ThisKey="OrderId" OtherKey="Id" Type="CustomerOrder" IsForeignKey="true" />
+    </Type>
+  </Table>
+  <Table Name="dbo.CustomerOrder" Member="CustomerOrders">
+    <Type Name="CustomerOrder">
+      <Column Name="Id" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
+      <Column Name="Date" Type="System.DateTime" DbType="Date NOT NULL" CanBeNull="false" />
+      <Column Name="Subtotal" Type="System.Decimal" DbType="Decimal(18,2) NOT NULL" CanBeNull="false" />
+      <Column Name="Total" Type="System.Decimal" DbType="Decimal(18,2) NOT NULL" CanBeNull="false" />
+      <Column Name="VATPercentage" Type="System.Decimal" DbType="Decimal(5,2) NOT NULL" CanBeNull="false" />
+      <Column Name="ShippingAddressID" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Column Name="CustomerID" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Association Name="CustomerOrder_OrderItem" Member="OrderItem" ThisKey="Id" OtherKey="OrderId" Type="OrderItem" Cardinality="One" />
+      <Association Name="CustomerOrder_Invoice" Member="Invoices" ThisKey="Id" OtherKey="OrderId" Type="Invoice" />
+      <Association Name="SysUser_CustomerOrder" Member="SysUser" ThisKey="CustomerID" OtherKey="Id" Type="SysUser" IsForeignKey="true" />
+      <Association Name="CustomerDeliveryAddress_CustomerOrder" Member="CustomerDeliveryAddress" ThisKey="ShippingAddressID" OtherKey="Id" Type="CustomerDeliveryAddress" IsForeignKey="true" />
     </Type>
   </Table>
 </Database>
