@@ -16,6 +16,100 @@ namespace DustCollectors
         DustCollectorsDBDataClassesDataContext db = new DustCollectorsDBDataClassesDataContext();
         DustCollectorsDBDataClassesDataContext dbWrite = new DustCollectorsDBDataClassesDataContext();
         /** Create methods */
+
+        //INVOICE MANAGEMENT
+        public int createInvoice(int userID, decimal subtotal, decimal vat, decimal deliveryfee, decimal grandTot)
+        {
+            var invoice = new Invoice
+            {
+                Id = userID,
+                Date = DateTime.Now,
+                Subtotal = subtotal,
+                VAT = vat,
+                DeliveryFee = deliveryfee,
+                Total = grandTot,
+                Status = "Pending"
+            };
+
+            db.Invoices.InsertOnSubmit(invoice);
+            db.SubmitChanges();
+
+            return invoice.Id;
+
+        }
+
+        /*
+            public List<Invoice> GetUserInvoices(int userID)
+            {
+                var invoices = (from i in db.Invoices
+                                where i.UserID.Equals(userID)
+                                select i).ToList();
+
+                return invoices;
+            } */
+
+        public List<InvoiceDTO> GetUserInvoices(int userID)
+        {
+            var invoices = (from i in db.Invoices
+                            where i.Id == userID
+                            select new InvoiceDTO
+                            {
+                                InvoiceID = i.Id,
+                                InvoiceDate = i.Date,
+                                TotalAmount = i.Total,
+                                Status = i.Status
+                            }).ToList();
+
+            return invoices;
+        }
+
+
+        public bool deleteInvoice(int inID)
+        {
+            var invoice = db.Invoices.FirstOrDefault(i => i.Id.Equals(inID));
+
+            if (invoice != null)
+            {
+                db.Invoices.DeleteOnSubmit(invoice);
+                db.SubmitChanges();
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+
+        }
+
+        /*
+        public Invoice getInvoiceByID(int inID)
+        {
+            return db.Invoices.FirstOrDefault(i => i.InvoiceID.Equals(inID));
+        } */
+
+        public InvoiceDTO getInvoiceByID(int inID)
+        {
+            return db.Invoices
+                     .Where(i => i.Id == inID)
+                     .Select(i => new InvoiceDTO
+                     {
+                         InvoiceID = i.Id,
+                         UserID = i.Id,
+                         InvoiceDate = i.Date,
+                         Subtotal = i.Subtotal,
+                         VAT = i.VAT,
+                         DeliveryFee = i.DeliveryFee,
+                         TotalAmount = i.Total,
+                         Status = i.Status
+                     })
+                     .FirstOrDefault();
+        }
+
+
+
+
+
+
         // checks if a user exists, if they exist, retruns false otherwise adds the user to the database and returns true
         bool IService1.IsReg(SysUser newUser)
         {
@@ -282,6 +376,7 @@ namespace DustCollectors
             }
         }
 
+        /*
         int IService1.createInvoice(int userID, int addressID,  decimal subtotal, decimal vat, decimal deliveryfee, decimal grandTot)
         {
             var invoice = new Invoice

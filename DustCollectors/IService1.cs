@@ -15,6 +15,33 @@ namespace DustCollectors
     public interface IService1
     {
         /** create methods */
+        //Invoice
+        [OperationContract]
+        int createInvoice(int userID, decimal subtotal, decimal vat, decimal deliveryfee, decimal grandTot);
+
+        /*
+        [OperationContract]
+        List<Invoice> GetUserInvoices(int userId);
+        */
+
+        [OperationContract]
+        List<InvoiceDTO> GetUserInvoices(int userID);
+
+        [OperationContract]
+        bool deleteInvoice(int inID);
+
+        /*
+        [OperationContract]
+        Invoice getInvoiceByID(int inID);
+        */
+
+        [OperationContract]
+        InvoiceDTO getInvoiceByID(int inID);
+
+
+
+        //Wishlist
+
         // user
         [OperationContract]
         bool IsReg(SysUser user);
@@ -36,6 +63,7 @@ namespace DustCollectors
         [OperationContract]
         bool AddItemToCart(int userId, int sizeId, int qty);
        
+        /*
         [OperationContract]
         int createInvoice(int userID, int addressID, decimal subtotal, decimal vat, decimal deliveryfee, decimal grandTot);
         /** retrieval methods */
@@ -138,6 +166,7 @@ namespace DustCollectors
         bool deleteCartItems(int userId);
         [OperationContract]
         bool removeShoeSize(int sizeId);
+
 
 
 

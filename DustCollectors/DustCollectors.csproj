@@ -104,6 +104,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>DustCollectorsDBDataClasses.dbml</DependentUpon>
     </Compile>
+    <Compile Include="IService1 - Copy.cs" />
     <Compile Include="obj\Debug\.NETFramework,Version=v4.7.2.AssemblyAttributes.cs" />
     <Compile Include="Service1.svc.cs">
       <DependentUpon>Service1.svc</DependentUpon>
