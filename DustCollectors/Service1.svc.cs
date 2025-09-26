@@ -38,33 +38,19 @@ namespace DustCollectors
 
         }
 
-        /*
-            public List<Invoice> GetUserInvoices(int userID)
+        
+            List<Invoice> IService1.GetUserInvoices(int userID)
             {
                 var invoices = (from i in db.Invoices
-                                where i.UserID.Equals(userID)
+                                where i.CustomerID.Equals(userID)
                                 select i).ToList();
 
                 return invoices;
-            } */
-
-        public List<InvoiceDTO> GetUserInvoices(int userID)
-        {
-            var invoices = (from i in db.Invoices
-                            where i.Id == userID
-                            select new InvoiceDTO
-                            {
-                                InvoiceID = i.Id,
-                                InvoiceDate = i.Date,
-                                TotalAmount = i.Total,
-                                Status = i.Status
-                            }).ToList();
-
-            return invoices;
-        }
+            } 
 
 
-        public bool deleteInvoice(int inID)
+
+        bool IService1.deleteInvoice(int inID)
         {
             var invoice = db.Invoices.FirstOrDefault(i => i.Id.Equals(inID));
 
@@ -81,30 +67,8 @@ namespace DustCollectors
 
         }
 
-        /*
-        public Invoice getInvoiceByID(int inID)
-        {
-            return db.Invoices.FirstOrDefault(i => i.InvoiceID.Equals(inID));
-        } */
-
-        public InvoiceDTO getInvoiceByID(int inID)
-        {
-            return db.Invoices
-                     .Where(i => i.Id == inID)
-                     .Select(i => new InvoiceDTO
-                     {
-                         InvoiceID = i.Id,
-                         UserID = i.Id,
-                         InvoiceDate = i.Date,
-                         Subtotal = i.Subtotal,
-                         VAT = i.VAT,
-                         DeliveryFee = i.DeliveryFee,
-                         TotalAmount = i.Total,
-                         Status = i.Status
-                     })
-                     .FirstOrDefault();
-        }
-
+     
+        
 
 
 
@@ -376,7 +340,7 @@ namespace DustCollectors
             }
         }
 
-        /*
+        
         int IService1.createInvoice(int userID, int addressID,  decimal subtotal, decimal vat, decimal deliveryfee, decimal grandTot)
         {
             var invoice = new Invoice
